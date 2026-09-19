@@ -158,6 +158,40 @@ def evaluate_pair_interaction(med_a: NormalizedMedication, med_b: NormalizedMedi
             evidence=evidence_list,
         )
 
+    # Tier 3.5: Fast 50,000 Combination Dataset Registry (Offline Hash Store)
+    from app.services.combination_dataset import get_pair_interaction
+    combo = get_pair_interaction(med_a.canonical_name, med_b.canonical_name)
+    if combo:
+        logger.info(f"Combination dataset hit for [{med_a.canonical_name}] + [{med_b.canonical_name}]")
+        sev = combo.get("severity", "moderate").lower()
+        title = combo.get("mechanism") or f"Clinical interaction between {med_a.canonical_name} and {med_b.canonical_name}"
+        plain_exp = combo.get("clinical_effect") or "A documented clinical interaction exists for this combination."
+        why_matters = f"Combining {med_a.canonical_name} and {med_b.canonical_name} carries a {sev.upper()} clinical risk profile."
+        action = combo.get("management") or "Consult a prescribing clinician or clinical pharmacist before taking these together."
+        urgent_warn = "SEEK IMMEDIATE MEDICAL CARE if severe adverse symptoms or distress occur." if sev == "high" else None
+        
+        evidence_list = [
+            EvidenceCitation(
+                source_name=cit,
+                source_url="https://dailymed.nlm.nih.gov",
+                label_section="Interactions / Clinical Studies",
+                excerpt=combo.get("mechanism", "Documented pharmacological evidence")
+            )
+            for cit in combo.get("citations", ["FDA DailyMed Reference"])
+        ]
+        
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level=sev,
+            title=title,
+            plain_explanation=plain_exp,
+            why_it_matters=why_matters,
+            recommended_action=action,
+            urgent_warning=urgent_warn,
+            evidence=evidence_list
+        )
+
     # Tier 4: Industry-Grade Pharmacological Class & Dynamic Evaluation Fallback
     logger.info(f"No static database rule matched for [{med_a.canonical_name}] + [{med_b.canonical_name}]. Applying Tier 4 Pharmacological Class Evaluation.")
     from app.services.gemini_service import evaluate_pharmacological_class_rules

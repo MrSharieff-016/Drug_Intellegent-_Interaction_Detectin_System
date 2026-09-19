@@ -218,3 +218,24 @@ def test_clear_analysis_history():
     assert len(list_after.json()) == 0
 
 
+def test_knowledge_base_status():
+    res = client.get("/api/knowledge-base/status")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "online"
+    assert data["total_feeds"] == 30
+    assert data["online_feeds"] == 30
+    assert "Knowledge Base Online" in data["badge_text"]
+    assert len(data["feeds"]) == 30
+
+
+def test_combination_dataset_stats():
+    res = client.get("/api/combination-dataset/stats")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "online"
+    assert data["total_combinations_indexed"] >= 10
+    assert data["offline_latency"] == "< 1ms"
+
+
+
