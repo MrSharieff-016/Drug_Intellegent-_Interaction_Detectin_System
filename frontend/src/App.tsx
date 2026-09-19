@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabase';
 import { Header } from './components/Header';
 import { AuthModal } from './components/AuthModal';
+import { ChatbotView } from './pages/ChatbotView';
 import { AnalyzerPage } from './pages/AnalyzerPage';
 import { HistoryPage } from './pages/HistoryPage';
 import { LimitationsPage } from './pages/LimitationsPage';
-import { ShieldCheck, Heart } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<'analyzer' | 'history' | 'limitations'>('analyzer');
+  const [activeTab, setActiveTab] = useState<'chat' | 'analyzer' | 'history' | 'limitations'>('chat');
   const [user, setUser] = useState<any>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
@@ -50,7 +51,7 @@ export function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-sky-500 selection:text-white transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50/60 dark:bg-[#070b12] text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-emerald-500 selection:text-white transition-colors duration-300">
       {/* Header */}
       <Header
         activeTab={activeTab}
@@ -62,7 +63,15 @@ export function App() {
       />
 
       {/* Main Content Area */}
-      <main className="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 py-6 flex-1 w-full flex flex-col">
+        {activeTab === 'chat' && (
+          <ChatbotView
+            user={user}
+            theme={theme}
+            toggleTheme={toggleTheme}
+            onOpenAuth={() => setIsAuthOpen(true)}
+          />
+        )}
         {activeTab === 'analyzer' && <AnalyzerPage user={user} />}
         {activeTab === 'history' && <HistoryPage user={user} />}
         {activeTab === 'limitations' && <LimitationsPage />}
@@ -72,27 +81,27 @@ export function App() {
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-8 text-xs text-slate-500 transition-colors duration-300">
-        <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
+      <footer className="bg-white/80 dark:bg-[#070b12]/80 border-t border-emerald-100 dark:border-slate-800 py-6 text-xs text-slate-500 transition-colors duration-300">
+        <div className="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-sky-500 dark:text-sky-400" />
-            <span className="font-semibold text-slate-800 dark:text-slate-300">MedSafe AI</span>
-            <span>— Educational Medication Interaction Risk Chatbot & RAG Prototype</span>
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span className="font-semibold text-slate-800 dark:text-slate-300 heading-italic">MedSafe AI</span>
+            <span>— Clinical Safety Chatbot grounded in 30 Open Knowledge Bases & 50k Combination Library</span>
           </div>
 
           <div className="flex items-center gap-4 text-[11px]">
             <button
               onClick={() => setActiveTab('limitations')}
-              className="hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
+              className="hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
             >
               Safety Disclaimer
             </button>
             <span>•</span>
             <button
               onClick={() => setActiveTab('limitations')}
-              className="hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
+              className="hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors"
             >
-              RxNorm & DailyMed Data Sources
+              RxNorm, WHO & DailyMed Data
             </button>
           </div>
         </div>

@@ -384,3 +384,18 @@ async def submit_feedback(
         return FeedbackResponse(status="success", message=msg, learning_applied=bool(learned_info), learned_rule=learned_info)
 
     raise HTTPException(status_code=500, detail="Failed to record feedback.")
+
+
+@router.get("/api/knowledge-base/status")
+async def get_kb_status():
+    """Returns real-time status of the 30 global open knowledge base feeds."""
+    from app.services.knowledge_service import get_knowledge_base_status
+    return get_knowledge_base_status()
+
+
+@router.get("/api/combination-dataset/stats")
+async def get_combination_stats():
+    """Returns metadata and count of indexed 50,000+ combination library."""
+    from app.services.combination_dataset import get_dataset_statistics
+    return get_dataset_statistics()
+

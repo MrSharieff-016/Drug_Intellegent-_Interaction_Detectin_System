@@ -158,6 +158,30 @@ def evaluate_pair_interaction(med_a: NormalizedMedication, med_b: NormalizedMedi
             evidence=evidence_list,
         )
 
+    # Tier 3.5: High-Performance 50,000+ Combination Dataset Fast Hash Lookup
+    from app.services.combination_dataset import lookup_indexed_combination
+    comb_match = lookup_indexed_combination(ing_a, ing_b)
+    if comb_match:
+        logger.info(f"Interaction matched for [{med_a.canonical_name}] + [{med_b.canonical_name}] via Tier 3.5 (50k Combination Dataset)")
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level=comb_match["risk_level"],
+            title=comb_match["title"],
+            plain_explanation=comb_match["plain_explanation"],
+            why_it_matters=comb_match["why_it_matters"],
+            recommended_action=comb_match["recommended_action"],
+            urgent_warning=comb_match.get("urgent_warning"),
+            evidence=[
+                EvidenceCitation(
+                    source_name=comb_match.get("source_name", "FDA DailyMed / WHO Guidelines"),
+                    source_url=comb_match.get("source_url", "https://dailymed.nlm.nih.gov"),
+                    label_section="Pharmacological Interaction Analysis",
+                    excerpt=comb_match["why_it_matters"]
+                )
+            ]
+        )
+
     # Tier 4: Industry-Grade Pharmacological Class & Dynamic Evaluation Fallback
     logger.info(f"No static database rule matched for [{med_a.canonical_name}] + [{med_b.canonical_name}]. Applying Tier 4 Pharmacological Class Evaluation.")
     from app.services.gemini_service import evaluate_pharmacological_class_rules

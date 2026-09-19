@@ -4,31 +4,41 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen font-sans transition-colors duration-300;
+    @apply bg-white text-slate-800 dark:bg-[#070b12] dark:text-slate-100 min-h-screen font-sans transition-colors duration-300;
   }
 }
 
-/* Custom UI Utilities */
+/* Elegant Italic Heading Typography */
+.heading-italic {
+  @apply font-serif italic tracking-tight;
+}
+
+/* Light Mode: Clean Medical Green & White Theme */
+/* Dark Mode: Enhanced Obsidian Neon Glassmorphism */
 .glass-panel {
-  @apply bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl transition-colors duration-300;
+  @apply bg-white/95 dark:bg-obsidian-900/90 backdrop-blur-md border border-emerald-100/80 dark:border-emerald-500/20 rounded-2xl shadow-sm dark:shadow-2xl dark:shadow-emerald-950/20 transition-all duration-300;
+}
+
+.chat-bubble-user {
+  @apply bg-emerald-600 text-white dark:bg-emerald-600 dark:text-white rounded-2xl rounded-br-sm shadow-md;
+}
+
+.chat-bubble-assistant {
+  @apply bg-emerald-50/60 dark:bg-obsidian-850 border border-emerald-200/60 dark:border-slate-800/90 text-slate-900 dark:text-slate-100 rounded-2xl rounded-bl-sm shadow-sm;
 }
 
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-sky-600 via-teal-500 to-indigo-600 dark:from-sky-400 dark:via-teal-300 dark:to-indigo-400;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-teal-600 to-sky-600 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400;
 }
 
 /* Scrollbar customization */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-slate-100 dark:bg-slate-950;
+  @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-slate-300 dark:bg-slate-700 rounded;
+  @apply bg-emerald-200/60 dark:bg-slate-700/60 rounded-full hover:bg-emerald-300 dark:hover:bg-slate-600;
 }
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-slate-400 dark:bg-slate-600;
-}
-

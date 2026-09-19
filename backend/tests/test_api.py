@@ -218,3 +218,21 @@ def test_clear_analysis_history():
     assert len(list_after.json()) == 0
 
 
+def test_knowledge_base_status():
+    res = client.get("/api/knowledge-base/status")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "online"
+    assert data["active_feeds"] == 30
+    assert len(data["biomedical_registries"]) >= 5
+
+
+def test_combination_dataset_stats():
+    res = client.get("/api/combination-dataset/stats")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["total_indexed_combinations"] >= 10
+    assert data["offline_grounding_ready"] is True
+
+
+
