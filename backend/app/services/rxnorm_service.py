@@ -485,3 +485,46 @@ async def get_medication_suggestions(query: str) -> List[SuggestionItem]:
         logger.warning(f"RxNorm spelling suggestions failed for '{q}': {e}")
 
     return suggestions[:10]
+
+
+def register_dynamic_brand_or_generic(
+    raw_name: str,
+    canonical_name: str,
+    rxcui: Optional[str] = None,
+    synonyms: Optional[List[str]] = None
+):
+    """
+    Dynamically registers a previously unresolved medication name (brand or generic)
+    into KNOWN_CANONICAL_MAP and _NORMALIZATION_CACHE so subsequent queries immediately resolve.
+    """
+    clean_name = sanitize_medication_name(raw_name).lower()
+    clean_canonical = sanitize_medication_name(canonical_name).lower()
+    if not clean_name:
+        clean_name = raw_name.strip().lower()
+    if not clean_canonical:
+        clean_canonical = canonical_name.strip().lower()
+
+    existing_rxcui = rxcui
+    existing_synonyms = synonyms or [clean_name, clean_canonical]
+    if clean_canonical in KNOWN_CANONICAL_MAP:
+        ref_rxcui, _, ref_syns = KNOWN_CANONICAL_MAP[clean_canonical]
+        if not existing_rxcui:
+            existing_rxcui = ref_rxcui
+        existing_synonyms = list(set(existing_synonyms + ref_syns))
+
+    if not existing_rxcui:
+        existing_rxcui = "99999"
+
+    KNOWN_CANONICAL_MAP[clean_name] = (existing_rxcui, clean_canonical, existing_synonyms)
+    KNOWN_CANONICAL_MAP[raw_name.strip().lower()] = (existing_rxcui, clean_canonical, existing_synonyms)
+
+    norm_obj = NormalizedMedication(
+        entered_name=raw_name,
+        canonical_name=clean_canonical,
+        rxcui=existing_rxcui,
+        synonyms=existing_synonyms
+    )
+    _NORMALIZATION_CACHE[clean_name] = norm_obj
+    _NORMALIZATION_CACHE[raw_name.strip().lower()] = norm_obj
+    logger.info(f"Learned dynamic brand mapping from feedback: '{clean_name}' -> '{clean_canonical}' (RxCUI {existing_rxcui})")
+

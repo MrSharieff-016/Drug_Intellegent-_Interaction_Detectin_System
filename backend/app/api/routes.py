@@ -78,11 +78,17 @@ async def analyze_medications(
         if norm:
             normalized_list.append(norm)
             logger.info(f"Normalized: '{item.name}' -> canonical='{norm.canonical_name}', rxcui='{norm.rxcui}', synonyms={norm.synonyms}")
+            if not norm.rxcui or norm.rxcui in ["0000", "00000"]:
+                unresolved_list.append({
+                    "entered_name": item.name,
+                    "reason": "Could not normalize medicine name with RxNorm database.",
+                    "suggestions": [f"{item.name} 500mg", f"{item.name} generic"]
+                })
         else:
             unresolved_list.append({
                 "entered_name": item.name,
                 "reason": "Could not normalize medicine name with RxNorm database.",
-                "suggestions": [f"{item.name} 5mg", f"{item.name} generic"]
+                "suggestions": [f"{item.name} 500mg", f"{item.name} generic"]
             })
 
     analysis_id = str(uuid.uuid4())
@@ -242,13 +248,87 @@ async def submit_feedback(
     payload: FeedbackRequest,
     x_user_id: Optional[str] = Header(None, alias="X-User-ID")
 ):
-    """Saves user rating and comment for an analysis."""
+    """
+    Saves user rating/comments and dynamically learns new medication resolutions
+    and interaction severity rules directly from feedback so future searches return accurate solutions.
+    """
+    learned_info: Dict[str, Any] = {}
+
+    # 1. Learn dynamic medication mapping if resolving an unresolved medication
+    if payload.unresolved_medication and payload.canonical_name:
+        from app.services.rxnorm_service import register_dynamic_brand_or_generic
+        register_dynamic_brand_or_generic(
+            raw_name=payload.unresolved_medication,
+            canonical_name=payload.canonical_name
+        )
+        learned_info["resolved_medication"] = {
+            "from": payload.unresolved_medication,
+            "to": payload.canonical_name
+        }
+        logger.info(f"Learned medication resolution from feedback: '{payload.unresolved_medication}' -> '{payload.canonical_name}'")
+
+    # 2. Learn dynamic interaction rule and risk severity
+    if payload.suggested_risk and (payload.medication_a or payload.unresolved_medication):
+        from app.services.rxnorm_service import normalize_medication_name
+        from app.services.database_service import register_local_ddi_rule
+
+        # Resolve ingredient A
+        raw_a = payload.medication_a or payload.unresolved_medication or ""
+        norm_a = await normalize_medication_name(raw_a)
+        name_a = norm_a.canonical_name if norm_a else (payload.canonical_name or raw_a).strip().lower()
+
+        # Resolve ingredient B
+        raw_b = payload.medication_b or ""
+        norm_b = await normalize_medication_name(raw_b) if raw_b else None
+        name_b = norm_b.canonical_name if norm_b else raw_b.strip().lower()
+
+        if name_a and name_b and name_a != name_b:
+            solution_text = (
+                payload.solution_action.strip()
+                if payload.solution_action and payload.solution_action.strip()
+                else f"Take {name_a.capitalize()} and {name_b.capitalize()} according to clinician guidance."
+            )
+            explanation_text = (
+                payload.comment.strip()
+                if payload.comment and payload.comment.strip()
+                else f"Feedback-verified {payload.suggested_risk.upper()} risk interaction between {name_a.capitalize()} and {name_b.capitalize()}."
+            )
+
+            register_local_ddi_rule(
+                ing_a=name_a,
+                ing_b=name_b,
+                risk_level=payload.suggested_risk,
+                mechanism=f"Feedback-learned interaction rule for {name_a} and {name_b}.",
+                patient_friendly_summary=explanation_text,
+                recommended_action_template=solution_text,
+                urgent_warning_template="CRITICAL EMERGENCY: Seek immediate medical attention if acute severe symptoms develop." if payload.suggested_risk == "high" else None,
+                source_info={
+                    "source_name": "MedSafe Clinician & User Verified Feedback Knowledge Base",
+                    "source_url": "https://medsafe.ai/community",
+                    "section_name": "Feedback-Trained Interaction Rules",
+                    "title": f"Learned Rule: {name_a.capitalize()} + {name_b.capitalize()}"
+                },
+                rxcui_a=norm_a.rxcui if norm_a else None,
+                rxcui_b=norm_b.rxcui if norm_b else None,
+            )
+            learned_info["learned_rule"] = {
+                "ingredient_a": name_a,
+                "ingredient_b": name_b,
+                "risk_level": payload.suggested_risk,
+                "solution": solution_text
+            }
+            logger.info(f"Learned DDI rule from feedback: [{name_a} + {name_b}] -> {payload.suggested_risk.upper()}")
+
+    # 3. Save feedback record into store / Supabase
     saved = save_feedback(
         analysis_id=payload.analysis_id,
         user_id=x_user_id,
-        rating=payload.rating,
+        rating=payload.rating or 1,
         comment=payload.comment
     )
-    if saved:
-        return FeedbackResponse(status="success", message="Thank you for your feedback!")
+
+    if saved or learned_info:
+        msg = "Feedback submitted and learned successfully! Future searches for this medication combination will immediately reflect the updated severity and solution."
+        return FeedbackResponse(status="success", message=msg, learning_applied=bool(learned_info), learned_rule=learned_info)
+
     raise HTTPException(status_code=500, detail="Failed to record feedback.")

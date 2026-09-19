@@ -2,7 +2,7 @@
 Pydantic Schemas for MedSafe AI API requests and responses.
 """
 
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -68,13 +68,23 @@ class SuggestionItem(BaseModel):
 
 class FeedbackRequest(BaseModel):
     analysis_id: str
-    rating: Literal[1, -1]  # 1 for thumbs up, -1 for thumbs down
+    rating: Optional[int] = 1  # 1 for thumbs up, -1 for thumbs down
     comment: Optional[str] = None
+
+    # Continuous Learning & Medication Resolution fields:
+    unresolved_medication: Optional[str] = None
+    canonical_name: Optional[str] = None
+    medication_a: Optional[str] = None
+    medication_b: Optional[str] = None
+    suggested_risk: Optional[Literal["high", "moderate", "low"]] = None
+    solution_action: Optional[str] = None
 
 
 class FeedbackResponse(BaseModel):
     status: str = "success"
     message: str = "Feedback submitted successfully."
+    learning_applied: bool = False
+    learned_rule: Optional[Dict[str, Any]] = None
 
 
 class AnalysisHistoryItem(BaseModel):

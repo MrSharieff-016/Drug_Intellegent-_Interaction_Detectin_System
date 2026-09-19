@@ -150,3 +150,48 @@ def test_feedback_submission():
     assert fb_resp.status_code == 200
     assert fb_resp.json()["status"] == "success"
 
+
+def test_dynamic_feedback_learning_loop():
+    # 1. Search an unknown unresolved medication combination
+    unresolved_name = "ZenithCureTest"
+    partner_name = "Ibuprofen"
+    
+    first_resp = client.post("/api/analyze", json={
+        "medications": [{"name": unresolved_name}, {"name": partner_name}]
+    })
+    assert first_resp.status_code == 200
+    first_data = first_resp.json()
+    unresolved_names = [u["entered_name"].lower() for u in first_data.get("not_found_or_ambiguous", [])]
+    assert unresolved_name.lower() in unresolved_names
+    
+    # 2. Submit feedback mapping unresolved brand to generic 'paracetamol' with 'low' severity rule
+    fb_resp = client.post("/api/feedback", json={
+        "analysis_id": first_data.get("analysis_id", "test-fb-loop"),
+        "rating": 1,
+        "unresolved_medication": unresolved_name,
+        "canonical_name": "paracetamol",
+        "medication_a": "paracetamol",
+        "medication_b": "ibuprofen",
+        "suggested_risk": "low",
+        "solution_action": "Safe to take together or alternate as directed by physician.",
+        "comment": "Learned from clinical feedback"
+    })
+    assert fb_resp.status_code == 200
+    fb_data = fb_resp.json()
+    assert fb_data["status"] == "success"
+    assert fb_data["learning_applied"] is True
+
+    # 3. Query the exact same combination again - it must resolve cleanly and match the learned severity
+    second_resp = client.post("/api/analyze", json={
+        "medications": [{"name": unresolved_name}, {"name": partner_name}]
+    })
+    assert second_resp.status_code == 200
+    second_data = second_resp.json()
+    assert len(second_data.get("not_found_or_ambiguous", [])) == 0
+    assert second_data["overall_risk"] == "low"
+    assert len(second_data["pair_results"]) >= 1
+    pair = second_data["pair_results"][0]
+    assert pair["risk_level"] == "low"
+    assert "alternate" in pair["recommended_action"].lower() or "physician" in pair["recommended_action"].lower() or "alternate" in pair["plain_explanation"].lower()
+
+

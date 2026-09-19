@@ -59,8 +59,14 @@ export interface SuggestionItem {
 
 export interface FeedbackPayload {
   analysis_id: string;
-  rating: 1 | -1;
+  rating?: 1 | -1;
   comment?: string;
+  unresolved_medication?: string;
+  canonical_name?: string;
+  medication_a?: string;
+  medication_b?: string;
+  suggested_risk?: 'high' | 'moderate' | 'low';
+  solution_action?: string;
 }
 
 export interface AnalysisHistoryItem {

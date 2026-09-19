@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { MedicationInput as MedicationType, AnalyzeResponse } from '../types';
-import { analyzeMedications } from '../services/api';
+import { MedicationInput as MedicationType, AnalyzeResponse, AmbiguousOrNotFoundMedicine } from '../types';
+import { analyzeMedications, submitFeedback } from '../services/api';
 import { MedicationInput } from '../components/MedicationInput';
 import { SafetyDisclaimer } from '../components/SafetyDisclaimer';
 import { RiskBadge } from '../components/RiskBadge';
@@ -15,6 +15,161 @@ import {
   Database,
   FileCheck
 } from 'lucide-react';
+
+interface UnresolvedMedicineCardProps {
+  amb: AmbiguousOrNotFoundMedicine;
+  analysisId: string;
+  otherMeds: MedicationType[];
+  onResolved: () => void;
+}
+
+const UnresolvedMedicineCard: React.FC<UnresolvedMedicineCardProps> = ({
+  amb,
+  analysisId,
+  otherMeds,
+  onResolved,
+}) => {
+  const [canonicalName, setCanonicalName] = useState(
+    amb.suggestions && amb.suggestions.length > 0 ? amb.suggestions[0].replace(/ generic| 5mg/gi, '') : ''
+  );
+  const [selectedRisk, setSelectedRisk] = useState<'high' | 'moderate' | 'low'>('low');
+  const [solutionAction, setSolutionAction] = useState('Take with food. Monitor for individual tolerance.');
+  const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+
+  const handleTeachAndResolve = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canonicalName.trim()) return;
+
+    setIsSubmitting(true);
+    const otherMedName = otherMeds.length > 0 ? otherMeds[0].name : '';
+    const res = await submitFeedback({
+      analysis_id: analysisId,
+      unresolved_medication: amb.entered_name,
+      canonical_name: canonicalName.trim(),
+      medication_a: amb.entered_name,
+      medication_b: otherMedName,
+      suggested_risk: selectedRisk,
+      solution_action: solutionAction,
+      comment: notes || `${amb.entered_name} resolved to ${canonicalName}.`,
+    });
+    setIsSubmitting(false);
+
+    if (res.success) {
+      setSuccessMsg(res.message || 'Learned successfully! Re-analyzing with updated knowledge...');
+      setTimeout(() => {
+        onResolved();
+      }, 700);
+    }
+  };
+
+  if (successMsg) {
+    return (
+      <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-200 flex items-center gap-2 text-xs font-semibold animate-fade-in">
+        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+        <span>{successMsg}</span>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleTeachAndResolve}
+      className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-sm"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-slate-900 dark:text-white text-xs">
+            Medicine: <span className="text-sky-600 dark:text-sky-400 font-mono">{amb.entered_name}</span>
+          </span>
+          <span className="text-[10px] text-slate-500 font-medium">({amb.reason})</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Active Ingredient / Canonical Generic:
+          </label>
+          <input
+            type="text"
+            required
+            value={canonicalName}
+            onChange={(e) => setCanonicalName(e.target.value)}
+            placeholder="e.g. Paracetamol, Metformin, Amoxicillin..."
+            className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            Assign Interaction Risk Severity:
+          </label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedRisk('high')}
+              className={`flex-1 text-[11px] py-1.5 px-2 rounded-lg border font-semibold transition-all ${
+                selectedRisk === 'high'
+                  ? 'bg-rose-600 text-white border-rose-600 shadow-sm'
+                  : 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900'
+              }`}
+            >
+              High Risk
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedRisk('moderate')}
+              className={`flex-1 text-[11px] py-1.5 px-2 rounded-lg border font-semibold transition-all ${
+                selectedRisk === 'moderate'
+                  ? 'bg-amber-600 text-white border-amber-600 shadow-sm'
+                  : 'bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-900'
+              }`}
+            >
+              Moderate
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedRisk('low')}
+              className={`flex-1 text-[11px] py-1.5 px-2 rounded-lg border font-semibold transition-all ${
+                selectedRisk === 'low'
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                  : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900'
+              }`}
+            >
+              Low / Safe
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+          Consumer Guidance / Solution:
+        </label>
+        <input
+          type="text"
+          value={solutionAction}
+          onChange={(e) => setSolutionAction(e.target.value)}
+          placeholder="e.g. Take with food, space doses by 2 hours, monitor blood glucose..."
+          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-1">
+        <button
+          type="submit"
+          disabled={isSubmitting || !canonicalName.trim()}
+          className="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow-sm"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          {isSubmitting ? 'Learning & Updating...' : 'Teach MedSafe & Resolve'}
+        </button>
+      </div>
+    </form>
+  );
+};
 
 interface AnalyzerPageProps {
   user: any;
@@ -153,20 +308,35 @@ export const AnalyzerPage: React.FC<AnalyzerPageProps> = ({ user }) => {
             </div>
           </div>
 
-          {/* Unresolved/Ambiguous alert if any */}
+          {/* Unresolved / Ambiguous alert with interactive learning feedback */}
           {result.not_found_or_ambiguous && result.not_found_or_ambiguous.length > 0 && (
-            <div className="glass-panel p-5 border-amber-500/30 bg-amber-950/20 text-xs text-amber-200 space-y-2">
-              <h4 className="font-bold text-amber-300 flex items-center gap-2 text-sm">
-                <HelpCircle className="w-4 h-4 text-amber-400" />
-                Unresolved or Ambiguous Medications:
-              </h4>
-              <ul className="list-disc list-inside space-y-1">
-                {result.not_found_or_ambiguous.map((amb, idx) => (
-                  <li key={idx}>
-                    <strong className="text-amber-300">{amb.entered_name}:</strong> {amb.reason}
-                  </li>
-                ))}
-              </ul>
+            <div className="space-y-4">
+              <div className="glass-panel p-5 border-amber-300 dark:border-amber-500/40 bg-amber-50/70 dark:bg-amber-950/30 text-xs text-amber-900 dark:text-amber-200 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h4 className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-2 text-sm">
+                    <HelpCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    Unresolved Medication Detected
+                  </h4>
+                  <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 font-bold tracking-wide">
+                    Continuous Learning Mode
+                  </span>
+                </div>
+                <p className="text-xs text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                  The medicine below was not found in the standard dictionary. You can teach MedSafe right now to map it and categorize its interaction severity (High, Moderate, or Low risk) so that future searches immediately return accurate solutions!
+                </p>
+
+                <div className="space-y-3">
+                  {result.not_found_or_ambiguous.map((amb, idx) => (
+                    <UnresolvedMedicineCard
+                      key={idx}
+                      amb={amb}
+                      analysisId={result.analysis_id}
+                      otherMeds={medications.filter((m) => m.name.trim().toLowerCase() !== amb.entered_name.toLowerCase())}
+                      onResolved={handleAnalyze}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 

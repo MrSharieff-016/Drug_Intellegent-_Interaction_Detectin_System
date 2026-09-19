@@ -64,19 +64,24 @@ export const fetchAnalysisDetail = async (id: string): Promise<AnalyzeResponse> 
   return res.data;
 };
 
+export interface FeedbackResult {
+  success: boolean;
+  message?: string;
+}
+
 export const submitFeedback = async (
   payload: FeedbackPayload,
   userId?: string
-): Promise<boolean> => {
+): Promise<FeedbackResult> => {
   try {
     const headers: Record<string, string> = {};
     if (userId) {
       headers['X-User-ID'] = userId;
     }
-    await api.post('/api/feedback', payload, { headers });
-    return true;
-  } catch (err) {
+    const res = await api.post<{ status: string; message: string }>('/api/feedback', payload, { headers });
+    return { success: true, message: res.data.message };
+  } catch (err: any) {
     console.error('Error submitting feedback:', err);
-    return false;
+    return { success: false, message: err?.response?.data?.detail || 'Failed to record feedback.' };
   }
 };
