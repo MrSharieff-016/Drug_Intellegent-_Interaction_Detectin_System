@@ -359,7 +359,11 @@ export const AnalyzerPage: React.FC<AnalyzerPageProps> = ({ user }) => {
           </div>
 
           {/* Feedback Widget */}
-          <FeedbackWidget analysisId={result.analysis_id} />
+          <FeedbackWidget
+            analysisId={result.analysis_id}
+            medications={medications}
+            onFeedbackApplied={handleAnalyze}
+          />
         </div>
       )}
     </div>

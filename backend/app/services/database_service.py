@@ -142,6 +142,10 @@ def save_analysis(
 
 def get_analysis_by_id(analysis_id: str) -> Optional[Dict[str, Any]]:
     """Retrieve analysis record by UUID."""
+    if not analysis_id:
+        return None
+    if analysis_id in _LOCAL_ANALYSES:
+        return _LOCAL_ANALYSES[analysis_id]
     if supabase_client:
         try:
             res = supabase_client.table("analyses").select("*").eq("id", analysis_id).execute()
@@ -213,37 +217,63 @@ def register_local_ddi_rule(
     if a > b:
         a, b = b, a
 
+    clean_risk = risk_level.strip().lower()
+
+    # Resolve RxCUIs if missing
+    from app.services.rxnorm_service import KNOWN_CANONICAL_MAP, sanitize_medication_name
+    clean_a = sanitize_medication_name(a) or a
+    clean_b = sanitize_medication_name(b) or b
+
+    resolved_rxcui_a = rxcui_a
+    resolved_rxcui_b = rxcui_b
+    if not resolved_rxcui_a or resolved_rxcui_a in ["0000", "00000"]:
+        if clean_a in KNOWN_CANONICAL_MAP:
+            resolved_rxcui_a = KNOWN_CANONICAL_MAP[clean_a][0]
+        elif a in KNOWN_CANONICAL_MAP:
+            resolved_rxcui_a = KNOWN_CANONICAL_MAP[a][0]
+
+    if not resolved_rxcui_b or resolved_rxcui_b in ["0000", "00000"]:
+        if clean_b in KNOWN_CANONICAL_MAP:
+            resolved_rxcui_b = KNOWN_CANONICAL_MAP[clean_b][0]
+        elif b in KNOWN_CANONICAL_MAP:
+            resolved_rxcui_b = KNOWN_CANONICAL_MAP[b][0]
+
     key = f"{a}|{b}"
     rule_data = {
         "id": str(uuid.uuid4()),
         "ingredient_a": a,
         "ingredient_b": b,
-        "rxcui_a": rxcui_a,
-        "rxcui_b": rxcui_b,
-        "risk_level": risk_level,
+        "rxcui_a": resolved_rxcui_a,
+        "rxcui_b": resolved_rxcui_b,
+        "risk_level": clean_risk,
         "mechanism": mechanism,
         "patient_friendly_summary": patient_friendly_summary,
         "recommended_action_template": recommended_action_template,
         "urgent_warning_template": urgent_warning_template,
         "active": True,
         "sources": source_info or {
-            "source_name": "DailyMed",
-            "source_url": "https://dailymed.nlm.nih.gov",
-            "source_type": "package_insert",
-            "title": f"FDA Package Label for {a.capitalize()} / {b.capitalize()}",
-            "license_note": "FDA Public Domain Data"
+            "source_name": "MedSafe Feedback Knowledge Base",
+            "source_url": "https://medsafe.ai/community",
+            "source_type": "clinical_feedback",
+            "title": f"Learned Interaction Rule: {a.capitalize()} / {b.capitalize()}",
+            "license_note": "MedSafe Clinical Feedback"
         },
     }
     _LOCAL_DDI_RULES[key] = rule_data
     _NEGATIVE_LOOKUP_CACHE.discard(key)
 
+    # Also register normalized clean pair
+    norm_key = f"{clean_a}|{clean_b}" if clean_a < clean_b else f"{clean_b}|{clean_a}"
+    _LOCAL_DDI_RULES[norm_key] = rule_data
+    _NEGATIVE_LOOKUP_CACHE.discard(norm_key)
+
     # Index by RxCUI if available
-    if rxcui_a and rxcui_b and rxcui_a not in ["0000", "00000"] and rxcui_b not in ["0000", "00000"]:
-        c1, c2 = rxcui_a.strip(), rxcui_b.strip()
+    if resolved_rxcui_a and resolved_rxcui_b and resolved_rxcui_a not in ["0000", "00000"] and resolved_rxcui_b not in ["0000", "00000"]:
+        c1, c2 = resolved_rxcui_a.strip(), resolved_rxcui_b.strip()
         rx_key = f"{c1}|{c2}" if c1 < c2 else f"{c2}|{c1}"
         _LOCAL_DDI_RULES_BY_RXCUI[rx_key] = rule_data
 
-    # Persist into Supabase ddi_rules table if connected
+    # Persist or update in Supabase ddi_rules table if connected
     if supabase_client:
         try:
             existing = (
@@ -253,19 +283,23 @@ def register_local_ddi_rule(
                 .eq("ingredient_b", b)
                 .execute()
             )
-            if not existing.data:
-                db_record = {
-                    "ingredient_a": a,
-                    "ingredient_b": b,
-                    "risk_level": risk_level,
-                    "mechanism": mechanism,
-                    "patient_friendly_summary": patient_friendly_summary,
-                    "recommended_action_template": recommended_action_template,
-                    "urgent_warning_template": urgent_warning_template,
-                    "active": True,
-                }
+            db_record = {
+                "ingredient_a": a,
+                "ingredient_b": b,
+                "risk_level": clean_risk,
+                "mechanism": mechanism,
+                "patient_friendly_summary": patient_friendly_summary,
+                "recommended_action_template": recommended_action_template,
+                "urgent_warning_template": urgent_warning_template,
+                "active": True,
+            }
+            if existing.data and len(existing.data) > 0:
+                rule_id = existing.data[0]["id"]
+                supabase_client.table("ddi_rules").update(db_record).eq("id", rule_id).execute()
+                logger.info(f"Updated existing DDI rule in Supabase: [{a} + {b}] -> {clean_risk.upper()}")
+            else:
                 supabase_client.table("ddi_rules").insert(db_record).execute()
-                logger.info(f"Persisted DDI rule [{a} + {b}] into Supabase ddi_rules table.")
+                logger.info(f"Inserted new DDI rule in Supabase: [{a} + {b}] -> {clean_risk.upper()}")
         except Exception as e:
             logger.error(f"Error persisting DDI rule to Supabase: {e}")
 

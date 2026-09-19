@@ -316,7 +316,9 @@ async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
     raw_clean = entered_name.strip()
     cache_key = raw_clean.lower()
     if cache_key in _NORMALIZATION_CACHE:
-        return _NORMALIZATION_CACHE[cache_key]
+        cached = _NORMALIZATION_CACHE[cache_key]
+        if cached.rxcui not in ["0000", "00000"]:
+            return cached
 
     sanitized = sanitize_medication_name(raw_clean)
     if not sanitized:
@@ -517,6 +519,11 @@ def register_dynamic_brand_or_generic(
 
     KNOWN_CANONICAL_MAP[clean_name] = (existing_rxcui, clean_canonical, existing_synonyms)
     KNOWN_CANONICAL_MAP[raw_name.strip().lower()] = (existing_rxcui, clean_canonical, existing_synonyms)
+
+    # Evict any stale cache entries that might have failed previously
+    stale_keys = [k for k, v in list(_NORMALIZATION_CACHE.items()) if (clean_name in k or raw_name.strip().lower() in k) and v.rxcui in ["0000", "00000"]]
+    for sk in stale_keys:
+        _NORMALIZATION_CACHE.pop(sk, None)
 
     norm_obj = NormalizedMedication(
         entered_name=raw_name,

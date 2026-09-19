@@ -268,21 +268,60 @@ async def submit_feedback(
         logger.info(f"Learned medication resolution from feedback: '{payload.unresolved_medication}' -> '{payload.canonical_name}'")
 
     # 2. Learn dynamic interaction rule and risk severity
-    if payload.suggested_risk and (payload.medication_a or payload.unresolved_medication):
+    if payload.suggested_risk:
         from app.services.rxnorm_service import normalize_medication_name
-        from app.services.database_service import register_local_ddi_rule
+        from app.services.database_service import register_local_ddi_rule, get_analysis_by_id
 
-        # Resolve ingredient A
-        raw_a = payload.medication_a or payload.unresolved_medication or ""
-        norm_a = await normalize_medication_name(raw_a)
-        name_a = norm_a.canonical_name if norm_a else (payload.canonical_name or raw_a).strip().lower()
+        candidate_pairs = []
+        if payload.medication_a and payload.medication_b:
+            candidate_pairs.append((payload.medication_a, payload.medication_b))
+        elif payload.unresolved_medication and payload.medication_b:
+            candidate_pairs.append((payload.canonical_name or payload.unresolved_medication, payload.medication_b))
 
-        # Resolve ingredient B
-        raw_b = payload.medication_b or ""
-        norm_b = await normalize_medication_name(raw_b) if raw_b else None
-        name_b = norm_b.canonical_name if norm_b else raw_b.strip().lower()
+        # If pairs not directly passed or additional pairs exist in the analysis
+        if payload.analysis_id:
+            analysis_rec = get_analysis_by_id(payload.analysis_id)
+            if analysis_rec:
+                resp_json = analysis_rec.get("response_json") or {}
+                pair_results = resp_json.get("pair_results") or []
+                for p in pair_results:
+                    p_a, p_b = p.get("medicine_a"), p.get("medicine_b")
+                    if p_a and p_b:
+                        candidate_pairs.append((p_a, p_b))
 
-        if name_a and name_b and name_a != name_b:
+                # If no pair results yet (e.g. single medicine or unresolved), inspect requested medications
+                req_json = analysis_rec.get("request_json") or {}
+                req_meds = [m.get("name") for m in req_json.get("medications", []) if m.get("name")]
+                if payload.unresolved_medication and payload.canonical_name:
+                    req_meds = [
+                        payload.canonical_name if m.lower() == payload.unresolved_medication.lower() else m
+                        for m in req_meds
+                    ]
+                if len(req_meds) >= 2:
+                    for i in range(len(req_meds)):
+                        for j in range(i + 1, len(req_meds)):
+                            candidate_pairs.append((req_meds[i], req_meds[j]))
+
+        seen_pairs = set()
+        learned_rules_list = []
+        for raw_a, raw_b in candidate_pairs:
+            if not raw_a or not raw_b:
+                continue
+
+            norm_a = await normalize_medication_name(raw_a)
+            name_a = norm_a.canonical_name if norm_a else (payload.canonical_name or raw_a).strip().lower()
+
+            norm_b = await normalize_medication_name(raw_b)
+            name_b = norm_b.canonical_name if norm_b else raw_b.strip().lower()
+
+            if not name_a or not name_b or name_a == name_b:
+                continue
+
+            pair_sort = tuple(sorted([name_a, name_b]))
+            if pair_sort in seen_pairs:
+                continue
+            seen_pairs.add(pair_sort)
+
             solution_text = (
                 payload.solution_action.strip()
                 if payload.solution_action and payload.solution_action.strip()
@@ -311,13 +350,18 @@ async def submit_feedback(
                 rxcui_a=norm_a.rxcui if norm_a else None,
                 rxcui_b=norm_b.rxcui if norm_b else None,
             )
-            learned_info["learned_rule"] = {
+            rule_entry = {
                 "ingredient_a": name_a,
                 "ingredient_b": name_b,
                 "risk_level": payload.suggested_risk,
                 "solution": solution_text
             }
+            learned_rules_list.append(rule_entry)
             logger.info(f"Learned DDI rule from feedback: [{name_a} + {name_b}] -> {payload.suggested_risk.upper()}")
+
+        if learned_rules_list:
+            learned_info["learned_rule"] = learned_rules_list[0]
+            learned_info["all_learned_rules"] = learned_rules_list
 
     # 3. Save feedback record into store / Supabase
     saved = save_feedback(

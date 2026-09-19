@@ -4,9 +4,15 @@ import { ThumbsUp, ThumbsDown, CheckCircle2, MessageSquare, Sparkles, Sliders } 
 
 interface FeedbackWidgetProps {
   analysisId: string;
+  medications?: Array<{ name: string; strength?: string; route?: string }>;
+  onFeedbackApplied?: () => void;
 }
 
-export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({ analysisId }) => {
+export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({
+  analysisId,
+  medications,
+  onFeedbackApplied,
+}) => {
   const [rating, setRating] = useState<1 | -1 | null>(null);
   const [comment, setComment] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -20,10 +26,16 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({ analysisId }) =>
     e.preventDefault();
     if (!rating && !suggestedRisk) return;
     setIsSubmitting(true);
+
+    const medA = medications && medications.length > 0 ? medications[0].name : undefined;
+    const medB = medications && medications.length > 1 ? medications[1].name : undefined;
+
     const res = await submitFeedback({
       analysis_id: analysisId,
       rating: rating || 1,
       comment,
+      medication_a: medA,
+      medication_b: medB,
       suggested_risk: suggestedRisk ? suggestedRisk : undefined,
       solution_action: solutionAction ? solutionAction : undefined,
     });
@@ -31,6 +43,11 @@ export const FeedbackWidget: React.FC<FeedbackWidgetProps> = ({ analysisId }) =>
     if (res.success) {
       setFeedbackMessage(res.message || 'Thank you for your feedback! The system has been updated.');
       setSubmitted(true);
+      if (suggestedRisk && onFeedbackApplied) {
+        setTimeout(() => {
+          onFeedbackApplied();
+        }, 800);
+      }
     }
   };
 
