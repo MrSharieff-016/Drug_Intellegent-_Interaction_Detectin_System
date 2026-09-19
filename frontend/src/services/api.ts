@@ -7,7 +7,14 @@ import {
   MedicationInputItem
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+let rawApiUrl = (import.meta.env.VITE_API_BASE_URL || '').trim();
+if (rawApiUrl && !rawApiUrl.startsWith('http://') && !rawApiUrl.startsWith('https://')) {
+  rawApiUrl = `https://${rawApiUrl}`;
+}
+if (rawApiUrl.endsWith('/')) {
+  rawApiUrl = rawApiUrl.slice(0, -1);
+}
+const API_BASE_URL = rawApiUrl;
 
 const api = axios.create({
   baseURL: API_BASE_URL,

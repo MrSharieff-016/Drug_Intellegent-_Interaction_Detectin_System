@@ -63,6 +63,19 @@ KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
     "combiflam": ("5640", "ibuprofen", ["ibuprofen", "brufen", "paracetamol"]),
     "ibugesic": ("5640", "ibuprofen", ["ibuprofen", "brufen"]),
 
+    # Naproxen / NSAIDs
+    "naproxen": ("7258", "naproxen", ["naprosyn", "aleve", "xenar", "anaprox"]),
+    "naprosyn": ("7258", "naproxen", ["naproxen", "aleve"]),
+    "aleve": ("7258", "naproxen", ["naproxen", "naprosyn"]),
+    "xenar": ("7258", "naproxen", ["naproxen"]),
+
+    # Lithium
+    "lithium": ("6448", "lithium", ["lithobid", "licarb", "lithium carbonate", "eskalith"]),
+    "lithium carbonate": ("6448", "lithium", ["lithobid", "licarb", "lithium"]),
+    "lithobid": ("6448", "lithium", ["lithium", "lithium carbonate"]),
+    "licarb": ("6448", "lithium", ["lithium", "lithium carbonate"]),
+    "eskalith": ("6448", "lithium", ["lithium", "lithium carbonate"]),
+
     # Aspirin
     "aspirin": ("1191", "aspirin", ["acetylsalicylic acid", "ecosprin", "disprin", "bayer aspirin"]),
     "acetylsalicylic acid": ("1191", "aspirin", ["aspirin", "ecosprin", "disprin"]),
