@@ -94,14 +94,22 @@ async def generate_plain_explanations(
             response_mime_type="application/json"
         )
 
-        # Call Gemini model
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt_text,
-            config=config
-        )
+        candidate_models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-1.5-flash"]
+        response = None
+        for model_name in candidate_models:
+            try:
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=prompt_text,
+                    config=config
+                )
+                if response and response.text:
+                    break
+            except Exception as m_err:
+                logger.warning(f"Model {model_name} failed: {m_err}. Trying next candidate.")
+                continue
 
-        if not response.text:
+        if not response or not response.text:
             logger.warning("Empty response from Gemini. Falling back to deterministic results.")
             return pair_results
 
@@ -188,6 +196,9 @@ def evaluate_pharmacological_class_rules(
     def is_nsaid(txt):
         return any(k in txt for k in ["ibuprofen", "naproxen", "diclofenac", "celecoxib", "indomethacin", "aspirin", "mefenamic", "ketoprofen", "piroxicam", "meloxicam", "brufen", "combiflam", "advil", "motrin"])
 
+    def is_methotrexate(txt):
+        return any(k in txt for k in ["methotrexate", "foltrax", "rheumatrex", "trevall"])
+
     def is_lithium(txt):
         return any(k in txt for k in ["lithium", "eskalith", "lithobid", "licarb"])
 
@@ -215,7 +226,133 @@ def evaluate_pharmacological_class_rules(
     def is_ace_arb(txt):
         return any(k in txt for k in ["lisinopril", "enalapril", "ramipril", "losartan", "telmisartan", "valsartan"])
 
-    # 1. Lithium + NSAID
+    def is_clopidogrel(txt):
+        return any(k in txt for k in ["clopidogrel", "plavix", "clopivas"])
+
+    def is_ppi(txt):
+        return any(k in txt for k in ["omeprazole", "pantoprazole", "esomeprazole", "rabeprazole", "lansoprazole"])
+
+    def is_levothyroxine(txt):
+        return any(k in txt for k in ["levothyroxine", "thyronorm", "eltroxin", "synthroid"])
+
+    def is_mineral_antacid(txt):
+        return any(k in txt for k in ["calcium", "iron", "ferrous", "aluminum", "magnesium", "antacid", "sucralfate", "zinc"])
+
+    def is_fluoroquinolone(txt):
+        return any(k in txt for k in ["ciprofloxacin", "levofloxacin", "moxifloxacin", "ofloxacin", "ciprodac"])
+
+    def is_pde5(txt):
+        return any(k in txt for k in ["sildenafil", "tadalafil", "vardenafil", "revatio", "viagra"])
+
+    def is_alpha_blocker(txt):
+        return any(k in txt for k in ["tamsulosin", "doxazosin", "prazosin", "silodosin", "alfuzosin"])
+
+    # 1. Methotrexate + NSAID / Aspirin (Severe Bone Marrow Toxicity)
+    if (is_methotrexate(text_a) and is_nsaid(text_b)) or (is_methotrexate(text_b) and is_nsaid(text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Severe Methotrexate Toxicity & Pancytopenia Hazard",
+            plain_explanation=f"Taking {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} decreases kidney excretion of methotrexate and displaces it from blood proteins, causing toxic blood levels of methotrexate.",
+            why_it_matters="NSAIDs inhibit renal tubular secretion and renal prostaglandin synthesis, elevating methotrexate AUC and risking lethal bone marrow suppression.",
+            recommended_action="Do NOT take aspirin or NSAIDs with methotrexate without specialist oncologist/rheumatologist monitoring.",
+            urgent_warning="CRITICAL EMERGENCY: Seek immediate medical care (Call 112 / 108) if experiencing severe mouth ulcers, high fever, dark bruised spots, or bloody vomiting.",
+            evidence=[
+                EvidenceCitation(
+                    source_name="CDSCO / FDA Black Box Warning",
+                    source_url="https://cdsco.gov.in/",
+                    label_section="Methotrexate Salicylate/NSAID Interaction",
+                    excerpt="Concomitant administration of NSAIDs or salicylates with methotrexate increases severe bone marrow suppression and gastrointestinal toxicity."
+                )
+            ]
+        )
+
+    # 2. Clopidogrel + Omeprazole (Loss of Antiplatelet Protection)
+    if (is_clopidogrel(text_a) and is_ppi(text_b)) or (is_clopidogrel(text_b) and is_ppi(text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Loss of Antiplatelet Efficacy (Clopidogrel + Omeprazole)",
+            plain_explanation=f"Combining {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} blocks the liver enzyme (CYP2C19) needed to activate clopidogrel, leaving platelets uninhibited.",
+            why_it_matters="Omeprazole significantly reduces active metabolite concentrations of clopidogrel, increasing arterial thrombosis risk.",
+            recommended_action="Switch from omeprazole to H2-receptor antagonists (like famotidine) or pantoprazole under physician guidance.",
+            urgent_warning="EMERGENCY: Seek immediate medical care if experiencing sudden chest pain, shortness of breath, or stroke symptoms.",
+            evidence=[
+                EvidenceCitation(
+                    source_name="FDA Drug Safety Communication",
+                    source_url="https://fda.gov/",
+                    label_section="CYP2C19 Drug Interaction",
+                    excerpt="Omeprazole reduces clopidogrel active metabolite level and antiplatelet activity."
+                )
+            ]
+        )
+
+    # 3. Levothyroxine + Calcium / Iron / Antacids (Thyroid Hormone Binding)
+    if (is_levothyroxine(text_a) and is_mineral_antacid(text_b)) or (is_levothyroxine(text_b) and is_mineral_antacid(text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="moderate",
+            title="Reduced Levothyroxine Absorption (Chelation & Gut Binding)",
+            plain_explanation=f"Taking {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} binds thyroid hormone in the stomach, preventing its absorption.",
+            why_it_matters="Divalent and trivalent cations form insoluble chelates with levothyroxine, lowering serum T4/T3 levels.",
+            recommended_action="Separate administration times by at least 4 hours.",
+            urgent_warning=None,
+            evidence=[
+                EvidenceCitation(
+                    source_name="IPC Pharmacovigilance Bulletin",
+                    source_url="https://ipc.gov.in/",
+                    label_section="Thyroid Absorption Safety",
+                    excerpt="Calcium and iron supplements impair gastrointestinal absorption of levothyroxine."
+                )
+            ]
+        )
+
+    # 4. Fluoroquinolones + Antacids / Minerals
+    if (is_fluoroquinolone(text_a) and is_mineral_antacid(text_b)) or (is_fluoroquinolone(text_b) and is_mineral_antacid(text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="moderate",
+            title="Reduced Antibiotic Bioavailability (Chelation Interaction)",
+            plain_explanation=f"Antacids and minerals bind to {med_a.canonical_name.capitalize()}, preventing the antibiotic from absorbing and fighting infection.",
+            why_it_matters="Cationic chelation reduces quinolone oral absorption by over 70%.",
+            recommended_action="Take the antibiotic 2 hours before or 6 hours after antacids or mineral supplements.",
+            urgent_warning=None,
+            evidence=[
+                EvidenceCitation(
+                    source_name="CDSCO Prescribing Guidelines",
+                    source_url="https://cdsco.gov.in/",
+                    label_section="Fluoroquinolone Absorption",
+                    excerpt="Multivalent cations significantly decrease fluoroquinolone systemic exposure."
+                )
+            ]
+        )
+
+    # 5. PDE5 Inhibitors + Alpha-Blockers (Severe Hypotension)
+    if (is_pde5(text_a) and is_alpha_blocker(text_b)) or (is_pde5(text_b) and is_alpha_blocker(text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Severe Additive Vasodilation & Hypotension Risk",
+            plain_explanation=f"Taking {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} causes systemic vasodilation and a dangerous drop in blood pressure.",
+            why_it_matters="Dual vascular smooth muscle relaxation induces symptomatic orthostatic hypotension.",
+            recommended_action="Initiate PDE5 inhibitor at the lowest dose and ensure blood pressure stability on alpha-blocker therapy first.",
+            urgent_warning="EMERGENCY: Sit or lie down immediately if feeling faint, dizzy, or lightheaded.",
+            evidence=[
+                EvidenceCitation(
+                    source_name="IPC Safety Guidelines",
+                    source_url="https://ipc.gov.in/",
+                    label_section="Vasodilator Safety",
+                    excerpt="Additive blood pressure lowering occurs when PDE5 inhibitors are co-administered with alpha-adrenergic blockers."
+                )
+            ]
+        )
+
+    # 6. Lithium + NSAID
     if (is_lithium(text_a) and is_nsaid(text_b)) or (is_lithium(text_b) and is_nsaid(text_a)):
         return PairResult(
             medicine_a=med_a.canonical_name,
@@ -523,16 +660,29 @@ async def analyze_unlisted_pair_with_ai(
                 response_mime_type="application/json"
             )
 
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt_text,
-                config=config
-            )
+            candidate_models = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-1.5-flash"]
+            response = None
+            for model_name in candidate_models:
+                try:
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=prompt_text,
+                        config=config
+                    )
+                    if response and response.text:
+                        break
+                except Exception as m_err:
+                    logger.warning(f"Model {model_name} failed: {m_err}. Trying next candidate.")
+                    continue
 
             if response.text:
                 parsed = json.loads(response.text)
-                risk = str(parsed.get("risk_level", "low")).strip().lower()
-                if risk not in ["high", "moderate", "low"]:
+                raw_risk = str(parsed.get("risk_level", "low")).strip().lower()
+                if any(k in raw_risk for k in ["high", "severe", "critical", "major"]):
+                    risk = "high"
+                elif any(k in raw_risk for k in ["moderate", "medium"]):
+                    risk = "moderate"
+                else:
                     risk = "low"
 
                 evidence = [

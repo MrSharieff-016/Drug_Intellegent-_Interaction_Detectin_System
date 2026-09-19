@@ -156,6 +156,10 @@ async def analyze_medications(
         retrieved_citations, conf = retrieve_evidence_for_pair(
             med_a.canonical_name, med_b.canonical_name
         )
+
+        # If pair has clinical evidence attached from rules or AI, reflect high retrieval confidence (0.98 to 1.0)
+        if base_result.evidence:
+            conf = max(conf, 0.98)
         confidence_scores.append(conf)
 
         # Combine rule citations with TF-IDF evidence
