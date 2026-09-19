@@ -583,7 +583,7 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({
                   </div>
                   <div className="chat-bubble-assistant p-4 rounded-2xl flex items-center gap-3 text-xs text-emerald-800 dark:text-emerald-300">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                    <span>Analyzing drug pair across 30 global knowledge feeds & 50,000 combination library...</span>
+                    <span>Loading...</span>
                   </div>
                 </div>
               )}
