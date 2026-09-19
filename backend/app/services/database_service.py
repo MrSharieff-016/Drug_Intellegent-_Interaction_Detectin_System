@@ -232,6 +232,32 @@ def register_local_ddi_rule(
         rx_key = f"{c1}|{c2}" if c1 < c2 else f"{c2}|{c1}"
         _LOCAL_DDI_RULES_BY_RXCUI[rx_key] = rule_data
 
+    # Persist into Supabase ddi_rules table if connected
+    if supabase_client:
+        try:
+            existing = (
+                supabase_client.table("ddi_rules")
+                .select("id")
+                .eq("ingredient_a", a)
+                .eq("ingredient_b", b)
+                .execute()
+            )
+            if not existing.data:
+                db_record = {
+                    "ingredient_a": a,
+                    "ingredient_b": b,
+                    "risk_level": risk_level,
+                    "mechanism": mechanism,
+                    "patient_friendly_summary": patient_friendly_summary,
+                    "recommended_action_template": recommended_action_template,
+                    "urgent_warning_template": urgent_warning_template,
+                    "active": True,
+                }
+                supabase_client.table("ddi_rules").insert(db_record).execute()
+                logger.info(f"Persisted DDI rule [{a} + {b}] into Supabase ddi_rules table.")
+        except Exception as e:
+            logger.error(f"Error persisting DDI rule to Supabase: {e}")
+
 
 def register_local_source_chunk(
     ingredient_names: List[str],
