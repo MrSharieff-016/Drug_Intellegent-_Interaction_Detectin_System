@@ -158,19 +158,10 @@ def evaluate_pair_interaction(med_a: NormalizedMedication, med_b: NormalizedMedi
             evidence=evidence_list,
         )
 
-    logger.info(f"No structured rule matched for [{med_a.canonical_name}] + [{med_b.canonical_name}]. Returning unknown status.")
-    # UNKNOWN RESULT (No rule found in prototype dataset)
-    return PairResult(
-        medicine_a=med_a.canonical_name,
-        medicine_b=med_b.canonical_name,
-        risk_level="unknown",
-        title=f"No curated interaction record for {med_a.canonical_name} and {med_b.canonical_name}",
-        plain_explanation=EXACT_UNKNOWN_TEXT,
-        why_it_matters="Limited prototype data available.",
-        recommended_action="Always consult a licensed pharmacist or physician for unlisted medicine combinations.",
-        urgent_warning=None,
-        evidence=[],
-    )
+    # Tier 4: Industry-Grade Pharmacological Class & Dynamic Evaluation Fallback
+    logger.info(f"No static database rule matched for [{med_a.canonical_name}] + [{med_b.canonical_name}]. Applying Tier 4 Pharmacological Class Evaluation.")
+    from app.services.gemini_service import evaluate_pharmacological_class_rules
+    return evaluate_pharmacological_class_rules(med_a, med_b)
 
 
 def calculate_overall_risk(pair_results: List[PairResult]) -> str:
