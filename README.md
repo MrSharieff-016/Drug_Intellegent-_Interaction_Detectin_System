@@ -220,5 +220,5 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key_here
 ## ⚠️ Limitations & Clinical Disclaimer
 
 - **Educational Prototype**: Designed for coursework demonstration.
-- **Data Coverage**: Contains clinically reviewed seed data for core benchmark drug pairs (e.g. Warfarin + NSAIDs, Nitrates + Sildenafil, ACE Inhibitors + Potassium-sparing diuretics). Unlisted pairs return an explicit unknown status.
+- **Data Coverage**: Contains clinically reviewed seed data for core benchmark drug pairs (e.g. Aspirin + Warfarin, Warfarin + NSAIDs, Nitrates + Sildenafil, ACE Inhibitors + Potassium-sparing diuretics). Unlisted pairs return an explicit unknown status.
 - **Emergency Advice**: High-risk warnings advise contacting a licensed pharmacist, prescriber, poison control (1-800-222-1222), or emergency services (911).

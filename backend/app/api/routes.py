@@ -24,12 +24,13 @@ from app.services.interaction_engine import (
     calculate_overall_risk,
 )
 from app.services.retrieval_service import retrieve_evidence_for_pair
-from app.services.gemini_service import generate_plain_explanations
+from app.services.gemini_service import generate_plain_explanations, analyze_unlisted_pair_with_ai
 from app.services.database_service import (
     save_analysis,
     get_user_analyses,
     get_analysis_by_id,
     save_feedback,
+    register_local_ddi_rule,
 )
 
 logger = logging.getLogger("medsafe.api")
@@ -106,10 +107,32 @@ async def analyze_medications(
     pair_results: List[PairResult] = []
     confidence_scores: List[float] = []
 
-    # 3. Evaluate deterministic rules & TF-IDF RAG retrieval for each pair
+    # 3. Evaluate rules & AI dynamic interaction reasoning for each pair
     for med_a, med_b in pairs:
         # Deterministic DDI lookup
         base_result = evaluate_pair_interaction(med_a, med_b)
+
+        # If unlisted in static rules, perform dynamic AI clinical analysis
+        if base_result.risk_level == "unknown":
+            ai_result = await analyze_unlisted_pair_with_ai(med_a, med_b)
+            if ai_result and ai_result.risk_level != "unknown":
+                base_result = ai_result
+                # Cache dynamically analyzed rule into local DDI store
+                register_local_ddi_rule(
+                    ing_a=med_a.canonical_name,
+                    ing_b=med_b.canonical_name,
+                    risk_level=ai_result.risk_level,
+                    mechanism=ai_result.title,
+                    patient_friendly_summary=ai_result.plain_explanation,
+                    recommended_action_template=ai_result.recommended_action,
+                    urgent_warning_template=ai_result.urgent_warning,
+                    source_info={
+                        "source_name": ai_result.evidence[0].source_name if ai_result.evidence else "CDSCO / IPC Guidelines",
+                        "source_url": "https://cdsco.gov.in/",
+                        "title": ai_result.title,
+                        "section_name": "AI Dynamic Drug Interaction Evaluation"
+                    }
+                )
 
         # Retrieve evidence snippets via TF-IDF
         retrieved_citations, conf = retrieve_evidence_for_pair(

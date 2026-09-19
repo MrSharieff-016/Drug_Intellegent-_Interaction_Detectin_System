@@ -40,6 +40,16 @@ def test_high_risk_curated_pair_evaluation():
     assert result.urgent_warning is not None
 
 
+def test_aspirin_warfarin_high_risk_evaluation():
+    med1 = NormalizedMedication(entered_name="Aspirin", canonical_name="aspirin", rxcui="1191")
+    med2 = NormalizedMedication(entered_name="Warfarin", canonical_name="warfarin", rxcui="11289")
+
+    result = evaluate_pair_interaction(med1, med2)
+    assert result.risk_level == "high"
+    assert "bleeding" in result.plain_explanation.lower() or "hemorrhage" in result.plain_explanation.lower()
+    assert result.urgent_warning is not None
+
+
 def test_unknown_interaction_wording_exact_match():
     med1 = NormalizedMedication(entered_name="UnknownDrugA", canonical_name="unknowndruga", rxcui="000")
     med2 = NormalizedMedication(entered_name="UnknownDrugB", canonical_name="unknowndrugb", rxcui="000")

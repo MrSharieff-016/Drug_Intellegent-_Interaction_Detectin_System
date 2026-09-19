@@ -14,6 +14,21 @@ logger = logging.getLogger("medsafe.seed")
 
 DEMO_RULES = [
     {
+        "ingredient_a": "aspirin",
+        "ingredient_b": "warfarin",
+        "risk_level": "high",
+        "mechanism": "Concurrent administration of aspirin (Ecosprin / Disprin) and warfarin (Coumadin / Warf) causes synergistic inhibition of haemostasis through additive antiplatelet and anticoagulant pharmacodynamic effects, significantly elevating the risk of major gastrointestinal ulceration, severe internal hemorrhage, intracranial bleeding, and hematoma.",
+        "patient_friendly_summary": "Taking aspirin (e.g., Ecosprin, Disprin) together with warfarin (Warf, Coumadin) severely increases your risk of dangerous internal bleeding, stomach hemorrhaging, and severe hematomas.",
+        "recommended_action_template": "Do NOT combine aspirin and warfarin unless explicitly prescribed and closely managed by a registered doctor or cardiologist with regular INR blood testing. Seek immediate medical guidance.",
+        "urgent_warning_template": "CRITICAL EMERGENCY: Call Indian National Emergency 112 or 108 Ambulance immediately if you notice blood in vomit, dark tarry stools, coughing up blood, sudden severe headache, or unusual severe bleeding.",
+        "source": {
+            "source_name": "CDSCO / IPC PvPI Guidelines",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "CDSCO Approved Prescribing Information - Aspirin & Warfarin Co-administration Warnings",
+            "section_name": "Drug Interactions & Boxed Warnings"
+        }
+    },
+    {
         "ingredient_a": "warfarin",
         "ingredient_b": "ibuprofen",
         "risk_level": "high",
@@ -117,10 +132,129 @@ DEMO_RULES = [
             "title": "Analgesic Combination Guidelines - IPC / CDSCO",
             "section_name": "Patient Counseling Information"
         }
+    },
+    {
+        "ingredient_a": "digoxin",
+        "ingredient_b": "furosemide",
+        "risk_level": "high",
+        "mechanism": "Furosemide-induced hypokalemia severely sensitizes the myocardium to digoxin, predisposing to fatal cardiac arrhythmias and digoxin toxicity.",
+        "patient_friendly_summary": "Taking furosemide (Lasix) with digoxin (Lanoxin) can lower blood potassium levels, triggering dangerous heart rhythm disturbances.",
+        "recommended_action_template": "Regular serum potassium and digoxin concentration monitoring is mandatory by your cardiologist.",
+        "urgent_warning_template": "CRITICAL EMERGENCY: Seek immediate emergency medical care (Call 112) if experiencing nausea, visual halos, or fluttering heart rate.",
+        "source": {
+            "source_name": "Indian Pharmacopoeia Commission (IPC)",
+            "source_url": "https://ipc.gov.in/",
+            "title": "IPC Safety Bulletin - Digoxin Toxicity & Hypokalemia",
+            "section_name": "Cardiovascular Drug Interactions"
+        }
+    },
+    {
+        "ingredient_a": "clopidogrel",
+        "ingredient_b": "omeprazole",
+        "risk_level": "high",
+        "mechanism": "Omeprazole inhibits CYP2C19, preventing metabolic activation of clopidogrel and increasing stent thrombosis / cardiovascular event risk.",
+        "patient_friendly_summary": "Omeprazole (Omez) blocks the activation of clopidogrel (Deplatt/Clopivas), reducing its blood-thinning protection against heart attack or stroke.",
+        "recommended_action_template": "Consult your doctor. Alternative acid reducers like Pantoprazole (Pan) or H2 blockers are preferred.",
+        "urgent_warning_template": "Seek emergency medical advice immediately if experiencing severe chest pressure, weakness, or shortness of breath.",
+        "source": {
+            "source_name": "CDSCO Drug Safety Alert",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "CDSCO Warning - Clopidogrel & Proton Pump Inhibitor Interaction",
+            "section_name": "Boxed Warnings"
+        }
+    },
+    {
+        "ingredient_a": "ciprofloxacin",
+        "ingredient_b": "theophylline",
+        "risk_level": "high",
+        "mechanism": "Ciprofloxacin inhibits hepatic CYP1A2 metabolic clearance of theophylline, raising serum levels and causing severe toxicity, seizures, and arrhythmias.",
+        "patient_friendly_summary": "Taking ciprofloxacin (Ciplox) with theophylline (Deriphyllin) can cause toxic blood levels of theophylline leading to severe seizures or heart tremors.",
+        "recommended_action_template": "Avoid concurrent use unless serum theophylline monitoring is closely maintained.",
+        "urgent_warning_template": "EMERGENCY: Call 112 / 108 Ambulance if severe nausea, tremors, rapid pulse, or confusion develops.",
+        "source": {
+            "source_name": "PvPI Drug Safety Bulletin",
+            "source_url": "https://ipc.gov.in/pvpi.html",
+            "title": "PvPI Alert - Fluoroquinolone & Methylxanthine Toxicity",
+            "section_name": "Adverse Drug Reactions"
+        }
+    },
+    {
+        "ingredient_a": "diltiazem",
+        "ingredient_b": "metoprolol",
+        "risk_level": "high",
+        "mechanism": "Additive AV nodal conduction slowdown and negative inotropy causing severe symptomatic bradycardia, hypotension, and heart block.",
+        "patient_friendly_summary": "Combining metoprolol (Betaloc) with diltiazem (Dilzem) can excessively slow your heart rate and cause severe low blood pressure.",
+        "recommended_action_template": "Requires close clinical heart rate and blood pressure monitoring by your cardiologist.",
+        "urgent_warning_template": "Seek emergency care immediately if experiencing fainting, extreme dizziness, or pulse dropping below 50 bpm.",
+        "source": {
+            "source_name": "Indian Heart Association Guidelines",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "Antihypertensive Co-administration Guidelines",
+            "section_name": "Cardiology Warnings"
+        }
+    },
+    {
+        "ingredient_a": "acetaminophen",
+        "ingredient_b": "amoxicillin",
+        "risk_level": "low",
+        "mechanism": "No significant clinical metabolic or excretion interaction between acetaminophen (paracetamol) and amoxicillin.",
+        "patient_friendly_summary": "Taking Paracetamol (Dolo/Crocin) with Amoxicillin (Mox/Novamox) is safe and commonly prescribed together for infections accompanied by fever or pain.",
+        "recommended_action_template": "Take both medications as directed by your physician.",
+        "urgent_warning_template": None,
+        "source": {
+            "source_name": "CDSCO General Prescribing Manual",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "Antibiotic & Analgesic Co-administration Safety",
+            "section_name": "Clinical Practice Guidelines"
+        }
+    },
+    {
+        "ingredient_a": "atorvastatin",
+        "ingredient_b": "metformin",
+        "risk_level": "low",
+        "mechanism": "No clinically relevant pharmacokinetic interaction between metformin and atorvastatin; standard safe combination for type 2 diabetes and dyslipidemia.",
+        "patient_friendly_summary": "Combining Metformin (Glycomet) with Atorvastatin (Atorva/Lipivas) is a standard, safe therapeutic regimen for diabetes and cholesterol management.",
+        "recommended_action_template": "Continue taking prescribed doses and monitor routine blood glucose and lipid panels.",
+        "urgent_warning_template": None,
+        "source": {
+            "source_name": "Indian Council of Medical Research (ICMR)",
+            "source_url": "https://icmr.gov.in/",
+            "title": "ICMR Guidelines for Diabetes & Cardiovascular Management",
+            "section_name": "Therapeutic Combinations"
+        }
+    },
+    {
+        "ingredient_a": "acetaminophen",
+        "ingredient_b": "pantoprazole",
+        "risk_level": "low",
+        "mechanism": "No adverse interaction; pantoprazole provides gastric mucosal protection while acetaminophen acts as a systemic analgesic.",
+        "patient_friendly_summary": "Taking Pantoprazole (Pan 40) with Paracetamol (Dolo 650) is safe and helps protect your stomach lining while relieving fever or pain.",
+        "recommended_action_template": "Follow standard dosing instructions provided by your doctor or pharmacist.",
+        "urgent_warning_template": None,
+        "source": {
+            "source_name": "CDSCO Approved Label",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "Gastroprotective Analgesic Dosing Protocol",
+            "section_name": "Patient Information"
+        }
     }
 ]
 
 DEMO_SOURCE_CHUNKS = [
+    {
+        "ingredient_names": ["aspirin", "warfarin", "ecosprin", "disprin", "warf", "coumadin"],
+        "section_name": "Drug Interactions - Aspirin and Warfarin Anticoagulant Risks (CDSCO / IPC)",
+        "content": (
+            "Co-administration of Aspirin (Ecosprin, Disprin) with Warfarin (Warf, Coumadin) causes synergistic inhibition of haemostasis. "
+            "Aspirin inhibits platelet COX-1 aggregation while Warfarin inhibits vitamin K-dependent clotting factor synthesis. "
+            "This combination substantially heightens gastrointestinal bleeding, major clinical hemorrhage, and hematoma risks. "
+            "Frequent INR testing and strict clinical supervision are mandatory. For severe bleeding emergencies in India, "
+            "contact 112 / 108 Ambulance or Victoria Hospital Poison Cell (080-26701150)."
+        ),
+        "source_name": "CDSCO / IPC PvPI Guidelines",
+        "source_url": "https://cdsco.gov.in/",
+        "source_title": "CDSCO Package Insert Guidelines - Aspirin & Anticoagulant Interactions"
+    },
     {
         "ingredient_names": ["warfarin", "ibuprofen", "brufen", "combiflam", "warf"],
         "section_name": "Drug Interactions - Anticoagulants and NSAIDs (CDSCO)",

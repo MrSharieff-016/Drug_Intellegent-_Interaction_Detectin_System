@@ -61,3 +61,16 @@ async def test_prompt_injection_like_input_does_not_override_curated_severity():
     # Risk level must stay high despite any prompt injection attempt
     assert results[0].risk_level == "high"
     assert "safe" not in results[0].plain_explanation.lower() or results[0].plain_explanation == orig_pair.plain_explanation
+
+
+@pytest.mark.asyncio
+async def test_analyze_unlisted_pair_with_ai_fallback_when_no_key(monkeypatch):
+    from app.services.gemini_service import analyze_unlisted_pair_with_ai
+    monkeypatch.setattr("app.services.gemini_service.settings.GEMINI_API_KEY", "")
+
+    med1 = NormalizedMedication(entered_name="Digoxin", canonical_name="digoxin", rxcui="3407")
+    med2 = NormalizedMedication(entered_name="Furosemide", canonical_name="furosemide", rxcui="4603")
+
+    result = await analyze_unlisted_pair_with_ai(med1, med2)
+    assert result is None
+

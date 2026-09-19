@@ -8,27 +8,27 @@ interface SafetyDisclaimerProps {
 export const SafetyDisclaimer: React.FC<SafetyDisclaimerProps> = ({ compact = false }) => {
   if (compact) {
     return (
-      <div className="bg-amber-950/40 border border-amber-500/30 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-amber-200">
-        <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+      <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-500/30 rounded-lg p-2.5 flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-200">
+        <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
         <div>
-          <span className="font-semibold text-amber-300">Educational Prototype Only:</span> Not a medical device. Never alter dosages or start/stop medicines without consulting a registered medical practitioner or pharmacist in India.
+          <span className="font-semibold text-amber-900 dark:text-amber-300">Educational Prototype Only:</span> Not a medical device. Never alter dosages or start/stop medicines without consulting a registered medical practitioner or pharmacist in India.
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-r from-amber-950/60 via-slate-900 to-amber-950/60 border border-amber-500/40 rounded-xl p-4 shadow-lg flex items-start gap-3.5 text-sm text-amber-200/90 my-4">
-      <ShieldAlert className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
+    <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 dark:from-amber-950/60 dark:via-slate-900 dark:to-amber-950/60 border border-amber-300 dark:border-amber-500/40 rounded-xl p-4 shadow-lg flex items-start gap-3.5 text-sm text-amber-900 dark:text-amber-200/90 my-4">
+      <ShieldAlert className="w-6 h-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
       <div className="space-y-1">
-        <h4 className="font-bold text-amber-300 text-base flex items-center gap-2">
+        <h4 className="font-bold text-amber-900 dark:text-amber-300 text-base flex items-center gap-2">
           Medical Safety Notice & Prototype Disclaimer (Indian Standards)
         </h4>
         <p className="leading-relaxed">
           MedSafe AI is strictly an <strong>educational research prototype</strong> and <strong>is not a certified medical device</strong>.
           It does not provide medical diagnoses, treatment advice, or dosage changes. Never stop, start, or alter any medication based on this tool.
         </p>
-        <p className="text-xs text-amber-300/80 font-mono pt-1">
+        <p className="text-xs text-amber-800 dark:text-amber-300/80 font-mono pt-1">
           For medical emergencies in Bengaluru & India, call Namma <strong>112</strong> / Ambulance <strong>108</strong>, Victoria Hospital Poison Response (Bengaluru) <strong>080-26701150</strong> / Health Helpline <strong>1056</strong>, or visit your nearest hospital in Bengaluru.
         </p>
       </div>

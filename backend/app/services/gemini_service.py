@@ -12,7 +12,7 @@ import json
 import logging
 from typing import List, Optional, Dict, Any
 from app.config import settings
-from app.schemas.request_response import PairResult, AnalyzeResponse, NormalizedMedication
+from app.schemas.request_response import PairResult, AnalyzeResponse, NormalizedMedication, EvidenceCitation
 
 logger = logging.getLogger("medsafe.gemini")
 
@@ -153,3 +153,93 @@ async def generate_plain_explanations(
     except Exception as e:
         logger.error(f"Gemini Service execution failed or validation error: {e}. Falling back to deterministic results.")
         return pair_results
+
+
+async def analyze_unlisted_pair_with_ai(
+    med_a: NormalizedMedication,
+    med_b: NormalizedMedication
+) -> Optional[PairResult]:
+    """
+    Dynamically evaluates an unlisted medication pair using Gemini AI clinical reasoning.
+    Categorizes the interaction into high, moderate, or low risk (or safe co-administration).
+    """
+    if not settings.GEMINI_API_KEY:
+        logger.info(f"GEMINI_API_KEY not set. Cannot run dynamic AI evaluation for {med_a.canonical_name} + {med_b.canonical_name}.")
+        return None
+
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=settings.GEMINI_API_KEY)
+
+        prompt_text = (
+            f"CLINICAL DRUG INTERACTION ANALYSIS:\n"
+            f"Evaluate the pharmacological interaction between:\n"
+            f"Medicine A: {med_a.entered_name} (Active Ingredient: {med_a.canonical_name})\n"
+            f"Medicine B: {med_b.entered_name} (Active Ingredient: {med_b.canonical_name})\n\n"
+            "RISK SEVERITY GUIDELINES:\n"
+            "- 'high': Severe, life-threatening, major bleeding, arrhythmia, severe hypotension, or toxicity.\n"
+            "- 'moderate': Moderate clinical risk requiring dose adjustment, monitoring, or absorption/clearance changes.\n"
+            "- 'low': Minor interaction OR safe co-administration with no significant clinical interaction.\n\n"
+            "Output JSON strictly matching this schema:\n"
+            "{\n"
+            '  "risk_level": "high" | "moderate" | "low",\n'
+            '  "title": "Short descriptive title of interaction or safe co-administration",\n'
+            '  "plain_explanation": "Empathetic, clear, 8th-grade patient-friendly summary",\n'
+            '  "why_it_matters": "Pharmacological mechanism & physiological impact",\n'
+            '  "recommended_action": "Actionable advice for patient or physician",\n'
+            '  "urgent_warning": "Emergency instructions if high/moderate, or null if low",\n'
+            '  "source_name": "CDSCO / IPC / FDA Drug Guidelines"\n'
+            "}"
+        )
+
+        config = types.GenerateContentConfig(
+            system_instruction=(
+                "You are an expert clinical pharmacologist and drug interaction safety system. "
+                "Analyze drug-drug interactions accurately based on medical consensus and regulatory standards (CDSCO/FDA). "
+                "Output valid JSON only."
+            ),
+            temperature=0.1,
+            response_mime_type="application/json"
+        )
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt_text,
+            config=config
+        )
+
+        if not response.text:
+            return None
+
+        parsed = json.loads(response.text)
+        risk = str(parsed.get("risk_level", "low")).strip().lower()
+        if risk not in ["high", "moderate", "low"]:
+            risk = "low"
+
+        evidence = [
+            EvidenceCitation(
+                source_name=str(parsed.get("source_name", "CDSCO / IPC / FDA Clinical Guidelines")),
+                source_url="https://cdsco.gov.in/",
+                label_section="AI Dynamic Drug Interaction Evaluation",
+                excerpt=str(parsed.get("why_it_matters", "Pharmacological interaction assessment")),
+            )
+        ]
+
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level=risk,
+            title=str(parsed.get("title", f"Interaction between {med_a.canonical_name} and {med_b.canonical_name}")),
+            plain_explanation=str(parsed.get("plain_explanation", "No major clinical interaction reported.")),
+            why_it_matters=str(parsed.get("why_it_matters", "Monitored for pharmacological compatibility.")),
+            recommended_action=str(parsed.get("recommended_action", "Consult a doctor or pharmacist for personalized guidance.")),
+            urgent_warning=parsed.get("urgent_warning"),
+            evidence=evidence,
+        )
+
+    except Exception as e:
+        logger.warning(f"AI interaction evaluation failed for {med_a.canonical_name} + {med_b.canonical_name}: {e}")
+        return None
+

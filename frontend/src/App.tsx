@@ -12,6 +12,27 @@ export function App() {
   const [user, setUser] = useState<any>(null);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
 
+  // Light / Dark Theme State Management
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('medsafe_theme');
+    if (saved === 'light' || saved === 'dark') return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark';
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('medsafe_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   useEffect(() => {
     if (!supabase) return;
 
@@ -29,13 +50,15 @@ export function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-sky-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between selection:bg-sky-500 selection:text-white transition-colors duration-300">
       {/* Header */}
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
 
       {/* Main Content Area */}
@@ -49,25 +72,25 @@ export function App() {
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
       {/* Footer */}
-      <footer className="bg-slate-950 border-t border-slate-900 py-8 text-xs text-slate-500">
+      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-900 py-8 text-xs text-slate-500 transition-colors duration-300">
         <div className="max-w-6xl mx-auto px-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-sky-400" />
-            <span className="font-semibold text-slate-300">MedSafe AI</span>
+            <ShieldCheck className="w-4 h-4 text-sky-500 dark:text-sky-400" />
+            <span className="font-semibold text-slate-800 dark:text-slate-300">MedSafe AI</span>
             <span>— Educational Medication Interaction Risk Chatbot & RAG Prototype</span>
           </div>
 
           <div className="flex items-center gap-4 text-[11px]">
             <button
               onClick={() => setActiveTab('limitations')}
-              className="hover:text-slate-300 transition-colors"
+              className="hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
             >
               Safety Disclaimer
             </button>
             <span>•</span>
             <button
               onClick={() => setActiveTab('limitations')}
-              className="hover:text-slate-300 transition-colors"
+              className="hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
             >
               RxNorm & DailyMed Data Sources
             </button>
