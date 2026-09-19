@@ -31,6 +31,8 @@ from app.services.database_service import (
     get_analysis_by_id,
     save_feedback,
     register_local_ddi_rule,
+    get_ddi_rule,
+    get_ddi_rule_by_rxcui,
 )
 
 logger = logging.getLogger("medsafe.api")
@@ -113,32 +115,42 @@ async def analyze_medications(
 
     # 3. Evaluate rules & AI dynamic interaction reasoning for each pair
     for med_a, med_b in pairs:
-        # Deterministic DDI lookup
+        # Check if pair is in static curated DDI rules (Tiers 1-3)
+        ing_a = med_a.canonical_name.strip().lower()
+        ing_b = med_b.canonical_name.strip().lower()
+
+        has_static_rule = False
+        if med_a.rxcui and med_b.rxcui and med_a.rxcui != "00000" and med_b.rxcui != "00000":
+            has_static_rule = bool(get_ddi_rule_by_rxcui(med_a.rxcui, med_b.rxcui))
+        if not has_static_rule:
+            has_static_rule = bool(get_ddi_rule(ing_a, ing_b))
+
         base_result = evaluate_pair_interaction(med_a, med_b)
 
-        # If unlisted in static rules, perform dynamic AI clinical analysis
-        if base_result.risk_level == "unknown":
+        # If unlisted in static curated DB rules, perform dynamic AI clinical reasoning
+        if not has_static_rule and "unknown" not in ing_a and "unknown" not in ing_b:
             ai_result = await analyze_unlisted_pair_with_ai(med_a, med_b)
-            if ai_result and ai_result.risk_level != "unknown":
+            if ai_result:
                 base_result = ai_result
-                # Cache dynamically analyzed rule into local DDI store
-                register_local_ddi_rule(
-                    ing_a=med_a.canonical_name,
-                    ing_b=med_b.canonical_name,
-                    risk_level=ai_result.risk_level,
-                    mechanism=ai_result.title,
-                    patient_friendly_summary=ai_result.plain_explanation,
-                    recommended_action_template=ai_result.recommended_action,
-                    urgent_warning_template=ai_result.urgent_warning,
-                    source_info={
-                        "source_name": ai_result.evidence[0].source_name if ai_result.evidence else "CDSCO / IPC Guidelines",
-                        "source_url": "https://cdsco.gov.in/",
-                        "title": ai_result.title,
-                        "section_name": "AI Dynamic Drug Interaction Evaluation"
-                    },
-                    rxcui_a=med_a.rxcui,
-                    rxcui_b=med_b.rxcui,
-                )
+                if ai_result.risk_level != "unknown":
+                    # Cache dynamically analyzed rule into local DDI store
+                    register_local_ddi_rule(
+                        ing_a=med_a.canonical_name,
+                        ing_b=med_b.canonical_name,
+                        risk_level=ai_result.risk_level,
+                        mechanism=ai_result.title,
+                        patient_friendly_summary=ai_result.plain_explanation,
+                        recommended_action_template=ai_result.recommended_action,
+                        urgent_warning_template=ai_result.urgent_warning,
+                        source_info={
+                            "source_name": ai_result.evidence[0].source_name if ai_result.evidence else "CDSCO / IPC Guidelines",
+                            "source_url": "https://cdsco.gov.in/",
+                            "title": ai_result.title,
+                            "section_name": "AI Dynamic Drug Interaction Evaluation"
+                        },
+                        rxcui_a=med_a.rxcui,
+                        rxcui_b=med_b.rxcui,
+                    )
 
         # Retrieve evidence snippets via TF-IDF
         retrieved_citations, conf = retrieve_evidence_for_pair(
