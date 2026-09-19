@@ -19,11 +19,10 @@ services:
       - key: RXNORM_BASE_URL
         value: "https://rxnav.nlm.nih.gov/REST"
 
-  # 2. React Frontend Static Site (Render spec uses type: web with env: static)
+  # 2. React Frontend Static Site (served globally via CDN; no region parameter)
   - type: web
     name: medsafe-ai-frontend
     env: static
-    region: oregon
     buildCommand: "cd frontend && npm install && npm run build"
     staticPublishPath: "./frontend/dist"
     envVars:
