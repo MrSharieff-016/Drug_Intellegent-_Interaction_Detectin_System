@@ -299,21 +299,91 @@ def evaluate_pharmacological_class_rules(
             evidence=[EvidenceCitation(source_name="PvPI Drug Alert", source_url="https://ipc.gov.in/pvpi.html", label_section="Serotonergic Safety", excerpt="Co-administration of SSRIs with serotonergic agents risks Serotonin Syndrome.")]
         )
 
-    # 6. Statin + Strong CYP3A4 Inhibitor
-    if (is_statin(text_a) and is_cyp3a4_inhibitor(text_b)) or (is_statin(text_b) and is_cyp3a4_inhibitor(text_a)):
+    # 7. Anticoagulants + NSAIDs / Aspirin
+    if (is_anticoagulant(text_a) and is_nsaid(text_b)) or (is_anticoagulant(text_b) and is_nsaid(text_a)):
         return PairResult(
             medicine_a=med_a.canonical_name,
             medicine_b=med_b.canonical_name,
             risk_level="high",
-            title="Severe Rhabdomyolysis & Muscle Toxicity Hazard",
-            plain_explanation=f"Combining {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} blocks statin clearance, risking severe muscle breakdown.",
-            why_it_matters="CYP3A4 inhibition elevates statin systemic exposure by up to 10-fold, predisposing to acute renal failure.",
-            recommended_action="Suspend statin therapy temporarily during short-term azole or macrolide antibiotic courses.",
-            urgent_warning="EMERGENCY: Contact your doctor if unexplained muscle pain, tenderness, or dark brown urine develops.",
-            evidence=[EvidenceCitation(source_name="IPC Safety Alert", source_url="https://ipc.gov.in/", label_section="Statin Myopathy", excerpt="Concomitant strong CYP3A4 inhibitors increase statin myopathy risks.")]
+            title="Severe Gastrointestinal & Systemic Bleeding Hazard",
+            plain_explanation=f"Combining {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} drastically increases the risk of dangerous internal and gastrointestinal bleeding.",
+            why_it_matters="NSAIDs inhibit platelet cyclooxygenase-1 and cause gastric mucosal erosions while anticoagulants prevent clotting factor synthesis.",
+            recommended_action="Avoid co-administration unless prescribed under close monitoring. Consider acetaminophen for analgesia.",
+            urgent_warning="CRITICAL EMERGENCY: Call 112 / 108 immediately if black tarry stools, vomiting blood, or unprovoked bruising occurs.",
+            evidence=[EvidenceCitation(source_name="CDSCO Drug Safety Warning", source_url="https://cdsco.gov.in/", label_section="Anticoagulation Safety", excerpt="Concomitant NSAIDs increase major bleeding hazard significantly.")]
         )
 
-    # 7. Default Dynamic Fallback for any other valid drug combination
+    # 8. ACE / ARB + Potassium / Potassium-Sparing Diuretics
+    if (is_ace_arb(text_a) and ("potassium" in text_b or "spironolactone" in text_b)) or (is_ace_arb(text_b) and ("potassium" in text_a or "spironolactone" in text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Severe Hyperkalemia & Cardiac Arrest Hazard",
+            plain_explanation=f"Taking {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} can cause dangerously high blood potassium levels.",
+            why_it_matters="Inhibition of aldosterone by renin-angiotensin blockers reduces urinary potassium excretion, causing hyperkalemic toxicity.",
+            recommended_action="Regular serum potassium and renal function monitoring required. Avoid over-the-counter potassium supplements.",
+            urgent_warning="EMERGENCY: Seek medical care immediately if experiencing muscle weakness, chest pain, or irregular heart rhythms.",
+            evidence=[EvidenceCitation(source_name="IPC Safety Guidelines", source_url="https://ipc.gov.in/", label_section="Cardiovascular Safety", excerpt="Renin-angiotensin blockade with potassium retention increases hyperkalemia risk.")]
+        )
+
+    # 9. Sildenafil / Tadalafil + Nitrates
+    if (("sildenafil" in text_a or "tadalafil" in text_a) and ("nitroglycerin" in text_b or "nitrate" in text_b)) or (("sildenafil" in text_b or "tadalafil" in text_b) and ("nitroglycerin" in text_a or "nitrate" in text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Severe Refractory Hypotension & Cardiovascular Collapse",
+            plain_explanation=f"Taking {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} causes a catastrophic drop in blood pressure.",
+            why_it_matters="PDE5 inhibition and nitric oxide donors act synergistically to produce massive cGMP elevation and systemic vasodilation.",
+            recommended_action="ABSOLUTE CONTRAINDICATION: Do NOT take nitrates within 24-48 hours of PDE5 inhibitors.",
+            urgent_warning="CRITICAL EMERGENCY: Call 112 / 108 immediately if severe dizziness, fainting, or chest pressure occurs.",
+            evidence=[EvidenceCitation(source_name="CDSCO Black Box Warning", source_url="https://cdsco.gov.in/", label_section="Cardiovascular Collapse", excerpt="Co-administration of nitrates and PDE5 inhibitors is strictly contraindicated.")]
+        )
+
+    # 10. Metformin + Alcohol
+    if ("metformin" in text_a and "ethanol" in text_b) or ("metformin" in text_b and "ethanol" in text_a):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Metformin Lactic Acidosis Hazard",
+            plain_explanation=f"Combining {med_a.canonical_name.capitalize()} with alcohol increases the risk of severe, life-threatening lactic acidosis.",
+            why_it_matters="Alcohol inhibits hepatic gluconeogenesis and lactate clearance, potentiating metformin-induced lactic acidosis.",
+            recommended_action="Avoid excessive or acute alcohol ingestion while taking metformin.",
+            urgent_warning="EMERGENCY: Seek medical evaluation if experiencing severe malaise, muscle pain, hyperventilation, or extreme fatigue.",
+            evidence=[EvidenceCitation(source_name="IPC Drug Safety Alert", source_url="https://ipc.gov.in/", label_section="Metabolic Safety", excerpt="Alcohol potentiates metformin effect on lactate metabolism.")]
+        )
+
+    # 11. Benzodiazepine / Opioid + CNS Depressant / Alcohol
+    if (("alprazolam" in text_a or "tramadol" in text_a) and ("ethanol" in text_b or "alprazolam" in text_b or "tramadol" in text_b)) or (("alprazolam" in text_b or "tramadol" in text_b) and ("ethanol" in text_a or "alprazolam" in text_a or "tramadol" in text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Severe CNS & Respiratory Depression Hazard",
+            plain_explanation=f"Taking {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} causes profound sedation, respiratory depression, coma, and death.",
+            why_it_matters="Additive GABAergic and central mu-opioid depression suppresses brainstem respiratory control centres.",
+            recommended_action="Avoid combining sedatives, opioids, and alcohol unless under strict specialist supervision.",
+            urgent_warning="CRITICAL EMERGENCY: Call 112 / 108 Ambulance if unresponsiveness, slow/shallow breathing, or blue lips occur.",
+            evidence=[EvidenceCitation(source_name="CDSCO Black Box Alert", source_url="https://cdsco.gov.in/", label_section="Opioid-Sedative Safety", excerpt="Concomitant use of opioids and benzodiazepines/depressants causes severe respiratory depression.")]
+        )
+
+    # 12. Beta-Blocker + Non-Dihydropyridine CCB
+    if (("metoprolol" in text_a or "propranolol" in text_a) and ("diltiazem" in text_b or "verapamil" in text_b)) or (("metoprolol" in text_b or "propranolol" in text_b) and ("diltiazem" in text_a or "verapamil" in text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Severe Bradycardia & AV Heart Block Hazard",
+            plain_explanation=f"Combining {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} can slow heart rate and cardiac conduction to dangerous levels.",
+            why_it_matters="Additive negative chronotropic and dromotropic cardiodepressant effects.",
+            recommended_action="Monitor ECG and heart rate closely. Dose adjustment required.",
+            urgent_warning="EMERGENCY: Seek medical care if pulse drops below 50 bpm, or if dizziness and fainting occur.",
+            evidence=[EvidenceCitation(source_name="IPC Guidelines", source_url="https://ipc.gov.in/", label_section="Cardiac Conduction", excerpt="Additive cardiodepression risks sinus arrest and complete heart block.")]
+        )
+
+    # 13. Default Dynamic Fallback for any other valid drug combination
     return PairResult(
         medicine_a=med_a.canonical_name,
         medicine_b=med_b.canonical_name,

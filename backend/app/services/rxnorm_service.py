@@ -7,6 +7,7 @@ Includes comprehensive local dictionary fallback mapping popular Indian brand na
 import re
 import logging
 import httpx
+import difflib
 from typing import List, Dict, Optional, Tuple
 from app.config import settings
 from app.schemas.request_response import NormalizedMedication, SuggestionItem
@@ -93,21 +94,30 @@ KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
     "nitrolong": ("7407", "nitroglycerin", ["nitroglycerin", "angiplat"]),
     "angiplat": ("7407", "nitroglycerin", ["nitroglycerin", "nitrolong"]),
 
-    # Lisinopril / Spironolactone
+    # Lisinopril / Spironolactone / Potassium
     "lisinopril": ("29046", "lisinopril", ["prinivil", "zestril", "listril", "lipril"]),
     "listril": ("29046", "lisinopril", ["lisinopril", "prinivil"]),
     "spironolactone": ("9997", "spironolactone", ["aldactone", "laxispiron", "carospir"]),
     "aldactone": ("9997", "spironolactone", ["spironolactone", "carospir"]),
+    "potassium": ("8591", "potassium chloride", ["kcl", "potklor", "potassium"]),
+    "potassium chloride": ("8591", "potassium chloride", ["kcl", "potklor"]),
+    "kcl": ("8591", "potassium chloride", ["potassium"]),
 
-    # Sertraline / Tramadol
+    # Sertraline / Tramadol / Benzodiazepines
     "sertraline": ("36437", "sertraline", ["zoloft", "daxid", "sertal"]),
     "zoloft": ("36437", "sertraline", ["sertraline", "daxid"]),
     "daxid": ("36437", "sertraline", ["sertraline", "zoloft"]),
-
     "tramadol": ("10689", "tramadol", ["ultram", "ultracet", "tramazac", "conzip"]),
     "ultram": ("10689", "tramadol", ["tramadol", "ultracet"]),
     "ultracet": ("10689", "tramadol", ["tramadol", "tramazac"]),
     "tramazac": ("10689", "tramadol", ["tramadol", "ultram"]),
+    "alprazolam": ("596", "alprazolam", ["xanax", "alprax", "restyl"]),
+    "xanax": ("596", "alprazolam", ["alprazolam", "alprax"]),
+    "alprax": ("596", "alprazolam", ["alprazolam", "xanax"]),
+
+    # Alcohol / Ethanol
+    "alcohol": ("448", "ethanol", ["alcohol", "ethanol", "liquor", "beer", "wine"]),
+    "ethanol": ("448", "ethanol", ["alcohol"]),
 
     # Metformin
     "metformin": ("6809", "metformin", ["glucophage", "glycomet", "obimet", "gluconorm"]),
@@ -120,7 +130,6 @@ KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
     "norvasc": ("17767", "amlodipine", ["amlodipine", "stamlo"]),
     "stamlo": ("17767", "amlodipine", ["amlodipine", "amlovas"]),
     "amlovas": ("17767", "amlodipine", ["amlodipine", "stamlo"]),
-
     "simvastatin": ("36567", "simvastatin", ["zocor", "simvotin"]),
     "zocor": ("36567", "simvastatin", ["simvastatin", "simvotin"]),
     "simvotin": ("36567", "simvastatin", ["simvastatin", "zocor"]),
@@ -138,17 +147,24 @@ KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
     "omeprazole": ("7646", "omeprazole", ["prilosec", "omez"]),
     "omez": ("7646", "omeprazole", ["omeprazole", "prilosec"]),
 
-    # Ciprofloxacin / Theophylline
+    # Ciprofloxacin / Levofloxacin / Azithromycin / Antacids
     "ciprofloxacin": ("2551", "ciprofloxacin", ["cipro", "ciplox"]),
     "ciplox": ("2551", "ciprofloxacin", ["ciprofloxacin"]),
+    "levofloxacin": ("82122", "levofloxacin", ["levaquin", "lcin"]),
+    "azithromycin": ("18631", "azithromycin", ["zithromax", "azithral"]),
+    "azithral": ("18631", "azithromycin", ["azithromycin"]),
     "theophylline": ("10438", "theophylline", ["deriphyllin", "theochron"]),
     "deriphyllin": ("10438", "theophylline", ["theophylline"]),
+    "antacid": ("115250", "antacid", ["gelusil", "digene", "mucaine", "magnesium hydroxide", "aluminum hydroxide"]),
+    "gelusil": ("115250", "antacid", ["antacid", "digene"]),
 
-    # Diltiazem / Metoprolol
+    # Diltiazem / Metoprolol / Haloperidol
     "diltiazem": ("3443", "diltiazem", ["dilzem", "cardizem"]),
     "dilzem": ("3443", "diltiazem", ["diltiazem"]),
     "metoprolol": ("6918", "metoprolol", ["betaloc", "lopressor", "toprol"]),
     "betaloc": ("6918", "metoprolol", ["metoprolol"]),
+    "haloperidol": ("5093", "haloperidol", ["haldol", "serenace"]),
+    "haldol": ("5093", "haloperidol", ["haloperidol"]),
 
     # Atorvastatin / Pantoprazole / Amoxicillin
     "atorvastatin": ("83367", "atorvastatin", ["atorva", "lipitor", "lipivas"]),
@@ -194,7 +210,7 @@ KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
 async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
     """
     Resolves an entered brand or generic medication name (Indian or global) to RxCUI and canonical active ingredient.
-    Cleans dosage/strength/form before matching.
+    Cleans dosage/strength/form before matching. Uses fuzzy matching for typos.
     """
     raw_clean = entered_name.strip()
     sanitized = sanitize_medication_name(raw_clean)
@@ -205,6 +221,32 @@ async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
     if sanitized in KNOWN_CANONICAL_MAP:
         rxcui, canonical, syns = KNOWN_CANONICAL_MAP[sanitized]
         all_syns = list(set([sanitized, canonical] + syns))
+        return NormalizedMedication(
+            entered_name=raw_clean,
+            canonical_name=canonical,
+            rxcui=rxcui,
+            synonyms=all_syns,
+        )
+
+    # Check un-sanitized lowercase just in case
+    low_raw = raw_clean.lower()
+    if low_raw in KNOWN_CANONICAL_MAP:
+        rxcui, canonical, syns = KNOWN_CANONICAL_MAP[low_raw]
+        all_syns = list(set([low_raw, canonical] + syns))
+        return NormalizedMedication(
+            entered_name=raw_clean,
+            canonical_name=canonical,
+            rxcui=rxcui,
+            synonyms=all_syns,
+        )
+
+    # 1b. Fuzzy match against local canonical dictionary for typos (e.g. "ibprophen", "lithum")
+    close_matches = difflib.get_close_matches(sanitized, KNOWN_CANONICAL_MAP.keys(), n=1, cutoff=0.78)
+    if close_matches:
+        match_key = close_matches[0]
+        rxcui, canonical, syns = KNOWN_CANONICAL_MAP[match_key]
+        all_syns = list(set([sanitized, match_key, canonical] + syns))
+        logger.info(f"Fuzzy matched typo '{sanitized}' -> '{match_key}' (canonical='{canonical}')")
         return NormalizedMedication(
             entered_name=raw_clean,
             canonical_name=canonical,
