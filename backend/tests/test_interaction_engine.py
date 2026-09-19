@@ -96,6 +96,16 @@ def test_lisinopril_spironolactone_high_risk():
     assert res.risk_level == "high"
 
 
+def test_lithium_ibuprofen_high_risk():
+    med1 = NormalizedMedication(entered_name="Lithium", canonical_name="lithium", rxcui="6448")
+    med2 = NormalizedMedication(entered_name="Ibuprofen", canonical_name="ibuprofen", rxcui="5640")
+
+    res = evaluate_pair_interaction(med1, med2)
+    assert res.risk_level == "high"
+    assert "lithium" in res.plain_explanation.lower() or "lithium" in res.title.lower()
+    assert res.urgent_warning is not None
+
+
 def test_aspirin_paracetamol_low_risk():
     med1 = NormalizedMedication(entered_name="Aspirin", canonical_name="aspirin", rxcui="1191")
     med2 = NormalizedMedication(entered_name="Paracetamol", canonical_name="acetaminophen", rxcui="161")

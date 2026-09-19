@@ -29,6 +29,21 @@ DEMO_RULES = [
         }
     },
     {
+        "ingredient_a": "ibuprofen",
+        "ingredient_b": "lithium",
+        "risk_level": "high",
+        "mechanism": "NSAIDs like ibuprofen decrease renal clearance of lithium by inhibiting renal prostaglandin synthesis, leading to significantly elevated serum lithium concentrations and severe lithium toxicity.",
+        "patient_friendly_summary": "Taking lithium (Eskalith/Lithobid) together with ibuprofen (Brufen/Combiflam) decreases lithium elimination by your kidneys, severely increasing blood lithium levels and raising risks of dangerous lithium toxicity.",
+        "recommended_action_template": "Avoid combining lithium with NSAID pain relievers unless serum lithium concentrations and kidney function are monitored closely by your prescribing physician. Paracetamol may be considered as an alternative.",
+        "urgent_warning_template": "CRITICAL EMERGENCY: Call 112 / 108 Ambulance immediately if you experience severe nausea, coarse hand tremors, slurred speech, confusion, blurred vision, or extreme weakness.",
+        "source": {
+            "source_name": "Indian Pharmacopoeia Commission (IPC) / CDSCO",
+            "source_url": "https://ipc.gov.in/",
+            "title": "IPC Safety Communication - Lithium Toxicity Hazard with NSAID Co-administration",
+            "section_name": "Drug Interactions & Warnings"
+        }
+    },
+    {
         "ingredient_a": "warfarin",
         "ingredient_b": "ibuprofen",
         "risk_level": "high",

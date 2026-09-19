@@ -156,6 +156,34 @@ KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
     "pan 40": ("40254", "pantoprazole", ["pantoprazole", "pan"]),
     "amoxicillin": ("723", "amoxicillin", ["mox", "novamox", "amoxil"]),
 
+    # Lithium
+    "lithium": ("6448", "lithium", ["eskalith", "lithobid", "lithium carbonate", "licarb"]),
+    "lithium carbonate": ("6448", "lithium", ["eskalith", "lithobid", "licarb"]),
+    "eskalith": ("6448", "lithium", ["lithium"]),
+    "lithobid": ("6448", "lithium", ["lithium"]),
+
+    # NSAIDs (Naproxen, Diclofenac, Celecoxib)
+    "naproxen": ("7258", "naproxen", ["aleve", "naprosyn", "xenar"]),
+    "diclofenac": ("3355", "diclofenac", ["voltaren", "voveran", "cataflam"]),
+    "voveran": ("3355", "diclofenac", ["diclofenac"]),
+    "celecoxib": ("140587", "celecoxib", ["celebrex", "celact"]),
+
+    # Antiarrhythmics & Cardio (Amiodarone, Verapamil, Losartan, Enalapril)
+    "amiodarone": ("703", "amiodarone", ["cordarone", "pacerone"]),
+    "verapamil": ("11170", "verapamil", ["calan", "isoptin", "verelan"]),
+    "losartan": ("5224", "losartan", ["cozaar", "losar", "repace"]),
+    "enalapril": ("3827", "enalapril", ["vasotec", "envas"]),
+
+    # Antidepressants (Fluoxetine, Escitalopram)
+    "fluoxetine": ("4493", "fluoxetine", ["prozac", "fludac", "sarafem"]),
+    "escitalopram": ("321988", "escitalopram", ["lexapro", "nexito"]),
+    "nexito": ("321988", "escitalopram", ["escitalopram"]),
+
+    # Immunosuppressants & Antibiotics (Methotrexate, Ketoconazole, Clarithromycin)
+    "methotrexate": ("6851", "methotrexate", ["rheumatrex", "trevall", "foltrax"]),
+    "ketoconazole": ("6135", "ketoconazole", ["nizoral", "fungicide"]),
+    "clarithromycin": ("21212", "clarithromycin", ["biaxin", "claribid"]),
+
     # Radiocontrast Media
     "contrast media": ("228494", "iodinated contrast media", ["radiopaque contrast", "iohexol", "omnipaque"]),
     "iodinated contrast media": ("228494", "iodinated contrast media", ["radiopaque contrast", "iohexol", "omnipaque"]),

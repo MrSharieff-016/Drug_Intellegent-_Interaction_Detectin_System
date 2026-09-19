@@ -47,34 +47,13 @@ def normalize_pair_key(ing_a: str, ing_b: str) -> str:
 
 
 def get_ddi_rule_by_rxcui(rxcui_a: str, rxcui_b: str) -> Optional[Dict[str, Any]]:
-    """Look up curated DDI rule by RxCUI pair (checks local fast cache first, then Supabase)."""
+    """Look up curated DDI rule by RxCUI pair (checks local fast cache)."""
     if not rxcui_a or not rxcui_b or rxcui_a in ["0000", "00000"] or rxcui_b in ["0000", "00000"]:
         return None
 
     c1, c2 = rxcui_a.strip(), rxcui_b.strip()
     key = f"{c1}|{c2}" if c1 < c2 else f"{c2}|{c1}"
-
-    # 1. Check local fast store
-    rule = _LOCAL_DDI_RULES_BY_RXCUI.get(key)
-    if rule:
-        return rule
-
-    # 2. Try Supabase fallback
-    if supabase_client:
-        try:
-            res = (
-                supabase_client.table("ddi_rules")
-                .select("*, sources(*)")
-                .or_(f"and(rxcui_a.eq.{c1},rxcui_b.eq.{c2}),and(rxcui_a.eq.{c2},rxcui_b.eq.{c1})")
-                .eq("active", True)
-                .execute()
-            )
-            if res.data and len(res.data) > 0:
-                return res.data[0]
-        except Exception as e:
-            logger.error(f"Error querying Supabase ddi_rules by RxCUI: {e}")
-
-    return None
+    return _LOCAL_DDI_RULES_BY_RXCUI.get(key)
 
 
 def get_ddi_rule(ing_a: str, ing_b: str) -> Optional[Dict[str, Any]]:

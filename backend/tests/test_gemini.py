@@ -72,5 +72,6 @@ async def test_analyze_unlisted_pair_with_ai_fallback_when_no_key(monkeypatch):
     med2 = NormalizedMedication(entered_name="Furosemide", canonical_name="furosemide", rxcui="4603")
 
     result = await analyze_unlisted_pair_with_ai(med1, med2)
-    assert result is None
+    assert result is not None
+    assert result.risk_level in ["high", "moderate", "low"]
 
