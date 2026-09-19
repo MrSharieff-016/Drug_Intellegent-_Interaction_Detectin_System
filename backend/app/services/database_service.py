@@ -47,24 +47,50 @@ def normalize_pair_key(ing_a: str, ing_b: str) -> str:
 
 
 def get_ddi_rule_by_rxcui(rxcui_a: str, rxcui_b: str) -> Optional[Dict[str, Any]]:
-    """Look up curated DDI rule by RxCUI pair."""
-    if not rxcui_a or not rxcui_b or rxcui_a == "0000" or rxcui_b == "0000" or rxcui_a == "00000" or rxcui_b == "00000":
+    """Look up curated DDI rule by RxCUI pair (checks local fast cache first, then Supabase)."""
+    if not rxcui_a or not rxcui_b or rxcui_a in ["0000", "00000"] or rxcui_b in ["0000", "00000"]:
         return None
-    
+
     c1, c2 = rxcui_a.strip(), rxcui_b.strip()
     key = f"{c1}|{c2}" if c1 < c2 else f"{c2}|{c1}"
-    return _LOCAL_DDI_RULES_BY_RXCUI.get(key)
+
+    # 1. Check local fast store
+    rule = _LOCAL_DDI_RULES_BY_RXCUI.get(key)
+    if rule:
+        return rule
+
+    # 2. Try Supabase fallback
+    if supabase_client:
+        try:
+            res = (
+                supabase_client.table("ddi_rules")
+                .select("*, sources(*)")
+                .or_(f"and(rxcui_a.eq.{c1},rxcui_b.eq.{c2}),and(rxcui_a.eq.{c2},rxcui_b.eq.{c1})")
+                .eq("active", True)
+                .execute()
+            )
+            if res.data and len(res.data) > 0:
+                return res.data[0]
+        except Exception as e:
+            logger.error(f"Error querying Supabase ddi_rules by RxCUI: {e}")
+
+    return None
 
 
 def get_ddi_rule(ing_a: str, ing_b: str) -> Optional[Dict[str, Any]]:
-    """Look up curated DDI rule for an active ingredient pair (canonical ordered)."""
+    """Look up curated DDI rule for an active ingredient pair (checks local fast cache first, then Supabase)."""
     if not ing_a or not ing_b:
         return None
-        
-    key = normalize_pair_key(ing_a, ing_b)
-    pair_a, pair_b = key.split("|")
 
-    # 1. Try Supabase query if available
+    key = normalize_pair_key(ing_a, ing_b)
+
+    # 1. Check local fast store first
+    rule = _LOCAL_DDI_RULES.get(key)
+    if rule:
+        return rule
+
+    # 2. Try Supabase fallback
+    pair_a, pair_b = key.split("|")
     if supabase_client:
         try:
             res = (
@@ -80,8 +106,7 @@ def get_ddi_rule(ing_a: str, ing_b: str) -> Optional[Dict[str, Any]]:
         except Exception as e:
             logger.error(f"Error querying Supabase ddi_rules: {e}")
 
-    # 2. Local store fallback
-    return _LOCAL_DDI_RULES.get(key)
+    return None
 
 
 def get_all_source_chunks() -> List[Dict[str, Any]]:
