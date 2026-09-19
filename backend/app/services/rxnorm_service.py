@@ -204,24 +204,131 @@ KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
     "contrast media": ("228494", "iodinated contrast media", ["radiopaque contrast", "iohexol", "omnipaque"]),
     "iodinated contrast media": ("228494", "iodinated contrast media", ["radiopaque contrast", "iohexol", "omnipaque"]),
     "iohexol": ("228494", "iodinated contrast media", ["omnipaque", "iodinated contrast media"]),
+
+    # Allergy & Antihistamines
+    "cetirizine": ("20610", "cetirizine", ["zyrtec", "cetzine", "okacet", "alercet"]),
+    "zyrtec": ("20610", "cetirizine", ["cetirizine", "cetzine"]),
+    "cetzine": ("20610", "cetirizine", ["cetirizine"]),
+    "okacet": ("20610", "cetirizine", ["cetirizine"]),
+    "levocetirizine": ("337535", "levocetirizine", ["xyzal", "levocet", "vozet", "1-cet"]),
+    "xyzal": ("337535", "levocetirizine", ["levocetirizine"]),
+    "loratadine": ("21307", "loratadine", ["claritin", "lorfast"]),
+    "claritin": ("21307", "loratadine", ["loratadine"]),
+    "fexofenadine": ("25480", "fexofenadine", ["allegra", "fexova", "histafree"]),
+    "allegra": ("25480", "fexofenadine", ["fexofenadine"]),
+    "montelukast": ("88249", "montelukast", ["singulair", "montair", "montek"]),
+    "montair": ("88249", "montelukast", ["montelukast", "singulair"]),
+    "diphenhydramine": ("3498", "diphenhydramine", ["benadryl"]),
+    "benadryl": ("3498", "diphenhydramine", ["diphenhydramine"]),
+
+    # Antibiotics (Cephalosporins, Macrolides, Tetracyclines, Penicillins)
+    "clavulanate": ("2670", "clavulanate", ["clavulanic acid", "clav"]),
+    "clavulanic acid": ("2670", "clavulanate", ["clavulanate"]),
+    "augmentin": ("617314", "amoxicillin and clavulanate", ["augmentin", "moxikind-cv", "clamoxyl", "amoxyclav"]),
+    "moxikind-cv": ("617314", "amoxicillin and clavulanate", ["augmentin", "amoxicillin"]),
+    "amoxyclav": ("617314", "amoxicillin and clavulanate", ["augmentin"]),
+    "doxycycline": ("3640", "doxycycline", ["vibramycin", "doxypal", "doxt", "microdox"]),
+    "metronidazole": ("6902", "metronidazole", ["flagyl", "metrogyl"]),
+    "flagyl": ("6902", "metronidazole", ["metronidazole"]),
+    "metrogyl": ("6902", "metronidazole", ["metronidazole"]),
+    "cephalexin": ("2231", "cephalexin", ["keflex", "cepdem", "sporidex"]),
+    "cefixime": ("2193", "cefixime", ["suprax", "zifi", "taxim-o", "ceftas"]),
+    "zifi": ("2193", "cefixime", ["cefixime"]),
+    "ceftriaxone": ("2198", "ceftriaxone", ["rocephin", "monocef"]),
+    "monocef": ("2198", "ceftriaxone", ["ceftriaxone"]),
+
+    # Cardiovascular, Beta-Blockers & Antihypertensives
+    "telmisartan": ("73494", "telmisartan", ["micardis", "telma", "telpres", "telsartan"]),
+    "telma": ("73494", "telmisartan", ["telmisartan"]),
+    "ramipril": ("35296", "ramipril", ["altace", "cardace"]),
+    "cardace": ("35296", "ramipril", ["ramipril"]),
+    "atenolol": ("1202", "atenolol", ["tenormin", "aten"]),
+    "carvedilol": ("20352", "carvedilol", ["coreg", "carca"]),
+    "propranolol": ("8787", "propranolol", ["inderal", "ciplar"]),
+    "ciplar": ("8787", "propranolol", ["propranolol"]),
+    "hydrochlorothiazide": ("5487", "hydrochlorothiazide", ["microzide", "hctz", "aquazide"]),
+    "chlorthalidone": ("2404", "chlorthalidone", ["hygroton", "thalidone"]),
+    "rosuvastatin": ("301542", "rosuvastatin", ["crestor", "rosuvas", "razel"]),
+    "crestor": ("301542", "rosuvastatin", ["rosuvastatin"]),
+    "rosuvas": ("301542", "rosuvastatin", ["rosuvastatin"]),
+
+    # Gastrointestinal & Antiemetics
+    "esomeprazole": ("283742", "esomeprazole", ["nexium", "esomac", "sompraz"]),
+    "nexium": ("283742", "esomeprazole", ["esomeprazole"]),
+    "rabeprazole": ("71104", "rabeprazole", ["aciphex", "rabeloc", "happi"]),
+    "rabeloc": ("71104", "rabeprazole", ["rabeprazole"]),
+    "ranitidine": ("9143", "ranitidine", ["zantac", "rantac", "aciloc"]),
+    "aciloc": ("9143", "ranitidine", ["ranitidine"]),
+    "famotidine": ("4278", "famotidine", ["pepcid", "facid"]),
+    "ondansetron": ("26225", "ondansetron", ["zofran", "emeset", "vomikind"]),
+    "emeset": ("26225", "ondansetron", ["ondansetron"]),
+    "domperidone": ("3579", "domperidone", ["motilium", "vomistop"]),
+
+    # Diabetes
+    "glimepiride": ("25789", "glimepiride", ["amaryl", "g-limda", "glimy"]),
+    "amaryl": ("25789", "glimepiride", ["glimepiride"]),
+    "gliclazide": ("4815", "gliclazide", ["diamicron", "glyloc"]),
+    "sitagliptin": ("593411", "sitagliptin", ["januvia", "istavel"]),
+    "januvia": ("593411", "sitagliptin", ["sitagliptin"]),
+    "vildagliptin": ("643064", "vildagliptin", ["galvus", "jalra"]),
+    "galvus": ("643064", "vildagliptin", ["vildagliptin"]),
+    "dapagliflozin": ("1488564", "dapagliflozin", ["farxiga", "forxiga", "dapa"]),
+    "empagliflozin": ("1545653", "empagliflozin", ["jardiance"]),
+    "jardiance": ("1545653", "empagliflozin", ["empagliflozin"]),
+    "insulin": ("5856", "insulin", ["humalog", "novorapid", "lantus", "mixtard"]),
+
+    # Pain, Neuro, Psych & Respiratory
+    "gabapentin": ("25480", "gabapentin", ["neurontin", "gabapin", "gabaneuron"]),
+    "gabapin": ("25480", "gabapentin", ["gabapentin"]),
+    "pregabalin": ("187832", "pregabalin", ["lyrica", "pregeb", "maxgalin"]),
+    "lyrica": ("187832", "pregabalin", ["pregabalin"]),
+    "diazepam": ("3322", "diazepam", ["valium", "calmpose"]),
+    "valium": ("3322", "diazepam", ["diazepam"]),
+    "clonazepam": ("2598", "clonazepam", ["klonopin", "clona", "zapiz", "rivotril"]),
+    "klonopin": ("2598", "clonazepam", ["clonazepam"]),
+    "rivotril": ("2598", "clonazepam", ["clonazepam"]),
+    "lorazepam": ("6470", "lorazepam", ["ativan", "larpose", "trapex"]),
+    "ativan": ("6470", "lorazepam", ["lorazepam"]),
+    "codeine": ("2670", "codeine", ["codectuss", "corex"]),
+    "morphine": ("7052", "morphine", ["ms contin"]),
+    "dexamethasone": ("3264", "dexamethasone", ["decadron", "dexona"]),
+    "dexona": ("3264", "dexamethasone", ["dexamethasone"]),
+    "prednisolone": ("8640", "prednisolone", ["omnapred", "wysolone"]),
+    "wysolone": ("8640", "prednisolone", ["prednisolone"]),
+    "prednisone": ("8640", "prednisone", ["deltasone"]),
+    "caffeine": ("1886", "caffeine", []),
+    "pseudoephedrine": ("8840", "pseudoephedrine", ["sudafed", "sinarest"]),
+    "dextromethorphan": ("3289", "dextromethorphan", ["benylin", "delsym", "ascoril-d"]),
+    "salbutamol": ("435", "albuterol", ["albuterol", "ventolin", "asthalin"]),
+    "albuterol": ("435", "albuterol", ["salbutamol", "ventolin", "asthalin"]),
+    "asthalin": ("435", "albuterol", ["salbutamol", "albuterol"]),
 }
+
+# Fast in-memory normalization cache for sub-millisecond lookups
+_NORMALIZATION_CACHE: Dict[str, NormalizedMedication] = {}
 
 
 async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
     """
     Resolves an entered brand or generic medication name (Indian or global) to RxCUI and canonical active ingredient.
-    Cleans dosage/strength/form before matching. Uses fuzzy matching for typos.
+    Cleans dosage/strength/form before matching. Uses fuzzy matching for typos. Caches results in memory.
     """
     raw_clean = entered_name.strip()
+    cache_key = raw_clean.lower()
+    if cache_key in _NORMALIZATION_CACHE:
+        return _NORMALIZATION_CACHE[cache_key]
+
     sanitized = sanitize_medication_name(raw_clean)
     if not sanitized:
         sanitized = raw_clean.lower()
+
+    res: Optional[NormalizedMedication] = None
 
     # 1. Check local canonical dictionary first using sanitized name
     if sanitized in KNOWN_CANONICAL_MAP:
         rxcui, canonical, syns = KNOWN_CANONICAL_MAP[sanitized]
         all_syns = list(set([sanitized, canonical] + syns))
-        return NormalizedMedication(
+        res = NormalizedMedication(
             entered_name=raw_clean,
             canonical_name=canonical,
             rxcui=rxcui,
@@ -230,10 +337,10 @@ async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
 
     # Check un-sanitized lowercase just in case
     low_raw = raw_clean.lower()
-    if low_raw in KNOWN_CANONICAL_MAP:
+    if not res and low_raw in KNOWN_CANONICAL_MAP:
         rxcui, canonical, syns = KNOWN_CANONICAL_MAP[low_raw]
         all_syns = list(set([low_raw, canonical] + syns))
-        return NormalizedMedication(
+        res = NormalizedMedication(
             entered_name=raw_clean,
             canonical_name=canonical,
             rxcui=rxcui,
@@ -241,89 +348,85 @@ async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
         )
 
     # 1b. Fuzzy match against local canonical dictionary for typos (e.g. "ibprophen", "lithum")
-    close_matches = difflib.get_close_matches(sanitized, KNOWN_CANONICAL_MAP.keys(), n=1, cutoff=0.65)
-    if close_matches:
-        match_key = close_matches[0]
-        rxcui, canonical, syns = KNOWN_CANONICAL_MAP[match_key]
-        all_syns = list(set([sanitized, match_key, canonical] + syns))
-        logger.info(f"Fuzzy matched typo '{sanitized}' -> '{match_key}' (canonical='{canonical}')")
-        return NormalizedMedication(
+    if not res:
+        close_matches = difflib.get_close_matches(sanitized, KNOWN_CANONICAL_MAP.keys(), n=1, cutoff=0.65)
+        if close_matches:
+            match_key = close_matches[0]
+            rxcui, canonical, syns = KNOWN_CANONICAL_MAP[match_key]
+            all_syns = list(set([sanitized, match_key, canonical] + syns))
+            logger.info(f"Fuzzy matched typo '{sanitized}' -> '{match_key}' (canonical='{canonical}')")
+            res = NormalizedMedication(
+                entered_name=raw_clean,
+                canonical_name=canonical,
+                rxcui=rxcui,
+                synonyms=all_syns,
+            )
+
+    # 2. Try RxNav NIH REST API with sanitized name if not found in local dictionary
+    if not res:
+        try:
+            async with httpx.AsyncClient(timeout=2.5) as client:
+                url = f"{settings.RXNORM_BASE_URL}/rxcui.json"
+                resp = await client.get(url, params={"name": sanitized})
+                if resp.status_code == 200:
+                    data = resp.json()
+                    id_group = data.get("idGroup", {})
+                    rx_list = id_group.get("rxnormId", [])
+                    if rx_list:
+                        rxcui = rx_list[0]
+                        ing_url = f"{settings.RXNORM_BASE_URL}/rxcui/{rxcui}/allrelated.json"
+                        ing_resp = await client.get(ing_url)
+                        canonical_name = sanitized
+                        syn_list = [sanitized]
+                        if ing_resp.status_code == 200:
+                            ing_data = ing_resp.json()
+                            concept_groups = ing_data.get("allRelatedGroup", {}).get("conceptGroup", [])
+                            for group in concept_groups:
+                                if group.get("tty") in ["IN", "PIN"]:
+                                    concepts = group.get("conceptProperties", [])
+                                    if concepts:
+                                        canonical_name = concepts[0].get("name", sanitized).lower()
+                                        syn_list.extend([c.get("name", "").lower() for c in concepts if c.get("name")])
+                                        break
+                        
+                        res = NormalizedMedication(
+                            entered_name=raw_clean,
+                            canonical_name=canonical_name,
+                            rxcui=rxcui,
+                            synonyms=list(set(syn_list)),
+                        )
+
+                if not res:
+                    approx_url = f"{settings.RXNORM_BASE_URL}/approximateTerm.json"
+                    approx_resp = await client.get(approx_url, params={"term": sanitized, "maxEntries": 1})
+                    if approx_resp.status_code == 200:
+                        approx_data = approx_resp.json()
+                        candidates = approx_data.get("approximateGroup", {}).get("candidate", [])
+                        if candidates:
+                            first = candidates[0]
+                            rxcui = first.get("rxcui", "0000")
+                            canonical_name = sanitize_medication_name(first.get("name", sanitized)) or sanitized
+                            res = NormalizedMedication(
+                                entered_name=raw_clean,
+                                canonical_name=canonical_name,
+                                rxcui=rxcui,
+                                synonyms=[sanitized],
+                            )
+
+        except Exception as e:
+            logger.warning(f"RxNorm API call failed for '{raw_clean}': {e}. Using sanitized string.")
+
+    # 3. Clean fallback
+    if not res:
+        res = NormalizedMedication(
             entered_name=raw_clean,
-            canonical_name=canonical,
-            rxcui=rxcui,
-            synonyms=all_syns,
+            canonical_name=sanitized,
+            rxcui="00000",
+            synonyms=[sanitized],
         )
 
-    # Check un-sanitized lowercase just in case
-    low_raw = raw_clean.lower()
-    if low_raw in KNOWN_CANONICAL_MAP:
-        rxcui, canonical, syns = KNOWN_CANONICAL_MAP[low_raw]
-        all_syns = list(set([low_raw, canonical] + syns))
-        return NormalizedMedication(
-            entered_name=raw_clean,
-            canonical_name=canonical,
-            rxcui=rxcui,
-            synonyms=all_syns,
-        )
-
-    # 2. Try RxNav NIH REST API with sanitized name
-    try:
-        async with httpx.AsyncClient(timeout=4.0) as client:
-            url = f"{settings.RXNORM_BASE_URL}/rxcui.json"
-            resp = await client.get(url, params={"name": sanitized})
-            if resp.status_code == 200:
-                data = resp.json()
-                id_group = data.get("idGroup", {})
-                rx_list = id_group.get("rxnormId", [])
-                if rx_list:
-                    rxcui = rx_list[0]
-                    ing_url = f"{settings.RXNORM_BASE_URL}/rxcui/{rxcui}/allrelated.json"
-                    ing_resp = await client.get(ing_url)
-                    canonical_name = sanitized
-                    syn_list = [sanitized]
-                    if ing_resp.status_code == 200:
-                        ing_data = ing_resp.json()
-                        concept_groups = ing_data.get("allRelatedGroup", {}).get("conceptGroup", [])
-                        for group in concept_groups:
-                            if group.get("tty") in ["IN", "PIN"]:
-                                concepts = group.get("conceptProperties", [])
-                                if concepts:
-                                    canonical_name = concepts[0].get("name", sanitized).lower()
-                                    syn_list.extend([c.get("name", "").lower() for c in concepts if c.get("name")])
-                                    break
-                    
-                    return NormalizedMedication(
-                        entered_name=raw_clean,
-                        canonical_name=canonical_name,
-                        rxcui=rxcui,
-                        synonyms=list(set(syn_list)),
-                    )
-
-            approx_url = f"{settings.RXNORM_BASE_URL}/approximateTerm.json"
-            approx_resp = await client.get(approx_url, params={"term": sanitized, "maxEntries": 1})
-            if approx_resp.status_code == 200:
-                approx_data = approx_resp.json()
-                candidates = approx_data.get("approximateGroup", {}).get("candidate", [])
-                if candidates:
-                    first = candidates[0]
-                    rxcui = first.get("rxcui", "0000")
-                    canonical_name = sanitize_medication_name(first.get("name", sanitized)) or sanitized
-                    return NormalizedMedication(
-                        entered_name=raw_clean,
-                        canonical_name=canonical_name,
-                        rxcui=rxcui,
-                        synonyms=[sanitized],
-                    )
-
-    except Exception as e:
-        logger.warning(f"RxNorm API call failed for '{raw_clean}': {e}. Using sanitized string.")
-
-    return NormalizedMedication(
-        entered_name=raw_clean,
-        canonical_name=sanitized,
-        rxcui="00000",
-        synonyms=[sanitized],
-    )
+    _NORMALIZATION_CACHE[cache_key] = res
+    return res
 
 
 async def get_medication_suggestions(query: str) -> List[SuggestionItem]:

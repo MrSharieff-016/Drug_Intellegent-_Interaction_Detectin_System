@@ -350,8 +350,15 @@ DEMO_SOURCE_CHUNKS = [
 
 from app.services.rxnorm_service import KNOWN_CANONICAL_MAP
 
-def seed_all_demo_data():
+_DEMO_DATA_SEEDED = False
+
+def seed_all_demo_data(force: bool = False):
     """Seeds demo interaction rules and TF-IDF chunks into local memory / Supabase."""
+    global _DEMO_DATA_SEEDED
+    if _DEMO_DATA_SEEDED and not force:
+        return
+    _DEMO_DATA_SEEDED = True
+
     logger.info("Seeding Indian standard DDI rules...")
     for r in DEMO_RULES:
         ing_a = r["ingredient_a"]

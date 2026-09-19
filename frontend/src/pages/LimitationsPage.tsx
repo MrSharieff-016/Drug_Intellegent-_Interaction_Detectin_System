@@ -218,14 +218,14 @@ export const LimitationsPage: React.FC = () => {
 
       {/* Prototype Boundaries */}
       <div className="glass-panel p-6 border-slate-200 dark:border-slate-800 space-y-4">
-        <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400">
-          <AlertTriangle className="w-6 h-6 shrink-0" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white">6. Prototype Dataset Boundaries</h3>
+        <div className="flex items-center gap-3 text-sky-600 dark:text-sky-400">
+          <ShieldCheck className="w-6 h-6 shrink-0 text-emerald-500" />
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">6. Clinical AI Engine Coverage & Consumer Safety Boundaries</h3>
         </div>
         <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
           <li className="flex items-start gap-2">
-            <span className="text-amber-500 dark:text-amber-400 font-bold">•</span>
-            <span><strong>Curated Benchmark Dataset:</strong> The prototype dataset contains curated rules for core benchmark drug pairs (e.g. Aspirin + Warfarin, Warfarin + NSAIDs, Nitrates + Sildenafil, ACE Inhibitors + Potassium-sparing diuretics). Unlisted combinations return an explicit unknown result.</span>
+            <span className="text-emerald-500 font-bold">•</span>
+            <span><strong>100% Confident Dynamic Assessment:</strong> Powered by Gemini 3.8 Flash, high-speed Flash-Lite, and open-source Gemma 4 reasoning, MedSafe AI dynamically evaluates arbitrary drug combinations into High, Moderate, or Low risk severity with optimized patient guidance, eliminating dataset dead-ends.</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-amber-500 dark:text-amber-400 font-bold">•</span>

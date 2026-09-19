@@ -17,6 +17,7 @@ _LOCAL_SOURCES: Dict[str, Dict[str, Any]] = {}
 _LOCAL_SOURCE_CHUNKS: List[Dict[str, Any]] = []
 _LOCAL_ANALYSES: Dict[str, Dict[str, Any]] = {}
 _LOCAL_FEEDBACK: List[Dict[str, Any]] = []
+_NEGATIVE_LOOKUP_CACHE: set = set()
 
 supabase_client = None
 
@@ -68,6 +69,10 @@ def get_ddi_rule(ing_a: str, ing_b: str) -> Optional[Dict[str, Any]]:
     if rule:
         return rule
 
+    # If known negative lookup, skip remote call
+    if key in _NEGATIVE_LOOKUP_CACHE:
+        return None
+
     # 2. Try Supabase fallback
     pair_a, pair_b = key.split("|")
     if supabase_client:
@@ -81,10 +86,15 @@ def get_ddi_rule(ing_a: str, ing_b: str) -> Optional[Dict[str, Any]]:
                 .execute()
             )
             if res.data and len(res.data) > 0:
-                return res.data[0]
+                rule_item = res.data[0]
+                _LOCAL_DDI_RULES[key] = rule_item
+                return rule_item
+            else:
+                _NEGATIVE_LOOKUP_CACHE.add(key)
         except Exception as e:
             logger.error(f"Error querying Supabase ddi_rules: {e}")
 
+    _NEGATIVE_LOOKUP_CACHE.add(key)
     return None
 
 
@@ -225,6 +235,7 @@ def register_local_ddi_rule(
         },
     }
     _LOCAL_DDI_RULES[key] = rule_data
+    _NEGATIVE_LOOKUP_CACHE.discard(key)
 
     # Index by RxCUI if available
     if rxcui_a and rxcui_b and rxcui_a not in ["0000", "00000"] and rxcui_b not in ["0000", "00000"]:

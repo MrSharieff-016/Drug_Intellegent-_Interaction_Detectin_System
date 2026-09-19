@@ -22,8 +22,8 @@ interface AnalyzerPageProps {
 
 export const AnalyzerPage: React.FC<AnalyzerPageProps> = ({ user }) => {
   const [medications, setMedications] = useState<MedicationType[]>([
-    { id: '1', name: 'Warfarin', strength: '5 mg', route: 'oral' },
-    { id: '2', name: 'Ibuprofen', strength: '400 mg', route: 'oral' },
+    { id: '1', name: '', strength: '', route: 'oral' },
+    { id: '2', name: '', strength: '', route: 'oral' },
   ]);
 
   const [isLoading, setIsLoading] = useState(false);

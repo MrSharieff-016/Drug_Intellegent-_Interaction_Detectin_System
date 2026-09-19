@@ -72,31 +72,64 @@ export const MedicationInput: React.FC<MedicationInputProps> = ({
     onChange(medications.filter((m) => m.id !== id));
   };
 
-  const loadPresetDemo = (pairName: string) => {
-    if (pairName === 'aspirin_warfarin') {
+  const POPULAR_MEDICATIONS = [
+    { name: 'Paracetamol', strength: '500 mg', route: 'oral' },
+    { name: 'Ibuprofen', strength: '400 mg', route: 'oral' },
+    { name: 'Aspirin', strength: '75 mg', route: 'oral' },
+    { name: 'Warfarin', strength: '5 mg', route: 'oral' },
+    { name: 'Metformin', strength: '500 mg', route: 'oral' },
+    { name: 'Atorvastatin', strength: '20 mg', route: 'oral' },
+    { name: 'Amlodipine', strength: '5 mg', route: 'oral' },
+    { name: 'Pantoprazole', strength: '40 mg', route: 'oral' },
+    { name: 'Amoxicillin', strength: '500 mg', route: 'oral' },
+    { name: 'Cetirizine', strength: '10 mg', route: 'oral' },
+    { name: 'Metoprolol', strength: '50 mg', route: 'oral' },
+    { name: 'Sildenafil', strength: '50 mg', route: 'oral' },
+    { name: 'Nitroglycerin', strength: '0.4 mg', route: 'sublingual' },
+    { name: 'Levothyroxine', strength: '100 mcg', route: 'oral' },
+    { name: 'Lisinopril', strength: '10 mg', route: 'oral' },
+  ];
+
+  const handleToggleIndividualMed = (med: { name: string; strength: string; route: string }) => {
+    const isAlreadyAdded = medications.some(
+      (m) => m.name.trim().toLowerCase() === med.name.toLowerCase()
+    );
+
+    if (isAlreadyAdded) {
+      const remaining = medications.filter(
+        (m) => m.name.trim().toLowerCase() !== med.name.toLowerCase()
+      );
+      if (remaining.length === 0) {
+        onChange([
+          { id: '1', name: '', strength: '', route: 'oral' },
+          { id: '2', name: '', strength: '', route: 'oral' },
+        ]);
+      } else if (remaining.length === 1) {
+        onChange([
+          remaining[0],
+          { id: '2', name: '', strength: '', route: 'oral' },
+        ]);
+      } else {
+        onChange(remaining);
+      }
+      return;
+    }
+
+    const emptyIndex = medications.findIndex((m) => !m.name.trim());
+    if (emptyIndex !== -1) {
+      const updated = [...medications];
+      updated[emptyIndex] = {
+        ...updated[emptyIndex],
+        name: med.name,
+        strength: med.strength,
+        route: med.route,
+      };
+      onChange(updated);
+    } else {
+      const newId = Date.now().toString();
       onChange([
-        { id: '1', name: 'Aspirin', strength: '75 mg', route: 'oral' },
-        { id: '2', name: 'Warfarin', strength: '5 mg', route: 'oral' },
-      ]);
-    } else if (pairName === 'warfarin_ibuprofen') {
-      onChange([
-        { id: '1', name: 'Warfarin', strength: '5 mg', route: 'oral' },
-        { id: '2', name: 'Ibuprofen', strength: '400 mg', route: 'oral' },
-      ]);
-    } else if (pairName === 'viagra_nitroglycerin') {
-      onChange([
-        { id: '1', name: 'Sildenafil', strength: '50 mg', route: 'oral' },
-        { id: '2', name: 'Nitroglycerin', strength: '0.4 mg', route: 'sublingual' },
-      ]);
-    } else if (pairName === 'lisinopril_spironolactone') {
-      onChange([
-        { id: '1', name: 'Lisinopril', strength: '10 mg', route: 'oral' },
-        { id: '2', name: 'Spironolactone', strength: '25 mg', route: 'oral' },
-      ]);
-    } else if (pairName === 'aspirin_paracetamol') {
-      onChange([
-        { id: '1', name: 'Aspirin', strength: '81 mg', route: 'oral' },
-        { id: '2', name: 'Paracetamol', strength: '500 mg', route: 'oral' },
+        ...medications,
+        { id: newId, name: med.name, strength: med.strength, route: med.route },
       ]);
     }
   };
@@ -114,50 +147,58 @@ export const MedicationInput: React.FC<MedicationInputProps> = ({
             Enter Medications to Analyze
           </h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Add brand or generic medicine names. Autocomplete uses NIH RxNorm database.
+            Type any medication name with NIH RxNorm autocomplete or click individual popular medicines below.
           </p>
         </div>
 
-        {/* Demo Preset Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" /> Demo Pairs:
+        {medications.some((m) => m.name.trim()) && (
+          <button
+            type="button"
+            onClick={() =>
+              onChange([
+                { id: '1', name: '', strength: '', route: 'oral' },
+                { id: '2', name: '', strength: '', route: 'oral' },
+              ])
+            }
+            className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/10 text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 transition-colors"
+          >
+            Clear All
+          </button>
+        )}
+      </div>
+
+      {/* Quick-Select Individual Medications */}
+      <div className="mb-6 p-4 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between gap-2 mb-2.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-sky-500" />
+            Popular Individual Medications (Click to Add / Remove):
           </span>
-          <button
-            type="button"
-            onClick={() => loadPresetDemo('aspirin_warfarin')}
-            className="text-xs px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 transition-colors font-semibold"
-          >
-            Aspirin + Warfarin
-          </button>
-          <button
-            type="button"
-            onClick={() => loadPresetDemo('warfarin_ibuprofen')}
-            className="text-xs px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 transition-colors"
-          >
-            Warfarin + Ibuprofen
-          </button>
-          <button
-            type="button"
-            onClick={() => loadPresetDemo('viagra_nitroglycerin')}
-            className="text-xs px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30 transition-colors"
-          >
-            Sildenafil + Nitroglycerin
-          </button>
-          <button
-            type="button"
-            onClick={() => loadPresetDemo('lisinopril_spironolactone')}
-            className="text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30 transition-colors"
-          >
-            Lisinopril + Spironolactone
-          </button>
-          <button
-            type="button"
-            onClick={() => loadPresetDemo('aspirin_paracetamol')}
-            className="text-xs px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/30 transition-colors"
-          >
-            Aspirin + Paracetamol
-          </button>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+            Select any 2 or more to test interactions
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {POPULAR_MEDICATIONS.map((med) => {
+            const isSelected = medications.some(
+              (m) => m.name.trim().toLowerCase() === med.name.toLowerCase()
+            );
+            return (
+              <button
+                key={med.name}
+                type="button"
+                onClick={() => handleToggleIndividualMed(med)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 font-medium ${
+                  isSelected
+                    ? 'bg-sky-600 text-white border-sky-600 shadow-sm shadow-sky-500/30'
+                    : 'bg-white dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-sky-400 dark:hover:border-sky-500 hover:text-sky-600 dark:hover:text-sky-400 shadow-sm'
+                }`}
+              >
+                <span className="font-bold text-xs">{isSelected ? '✓' : '+'}</span>
+                <span>{med.name}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

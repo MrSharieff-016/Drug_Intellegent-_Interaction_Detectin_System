@@ -25,13 +25,13 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
       icon: AlertCircle,
     },
     low: {
-      bg: 'bg-sky-500/20 text-sky-300 border-sky-500/40 ring-sky-500/30',
-      label: 'LOW RISK INTERACTION',
+      bg: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 ring-emerald-500/30',
+      label: 'LOW RISK (SAFE / COMPATIBLE)',
       icon: Info,
     },
     unknown: {
       bg: 'bg-slate-700/40 text-slate-300 border-slate-600/50 ring-slate-500/20',
-      label: 'NO KNOWN RECORD IN DATASET',
+      label: 'UNRESOLVED MEDICATION',
       icon: HelpCircle,
     },
   };
