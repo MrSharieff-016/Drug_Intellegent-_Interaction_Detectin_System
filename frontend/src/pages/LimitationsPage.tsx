@@ -18,13 +18,13 @@ export const LimitationsPage: React.FC = () => {
       {/* Title Header */}
       <div className="glass-panel p-8 border-slate-800 bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 text-center space-y-3">
         <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold uppercase tracking-wider">
-          Indian Healthcare & Clinical Safety Framework
+          Indian & Bengaluru Emergency Medical Standards
         </span>
         <h2 className="text-3xl font-bold text-white tracking-tight">
-          MedSafe AI: Limitations, Indian Standards & Emergency Protocol
+          MedSafe AI: Limitations & Bengaluru Emergency Medical Standards
         </h2>
         <p className="text-sm text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Comprehensive breakdown of educational prototype boundaries, deterministic decision architecture, Indian drug regulator sources (CDSCO / IPC / PvPI), and Indian emergency medical center contact protocols.
+          Comprehensive breakdown of educational prototype boundaries, deterministic decision architecture, Indian drug regulatory frameworks (CDSCO / IPC / PvPI / Karnataka Drugs Control), and Bengaluru emergency medical & poison response protocols.
         </p>
       </div>
 
@@ -32,10 +32,10 @@ export const LimitationsPage: React.FC = () => {
       <div className="glass-panel p-6 border-amber-500/40 bg-gradient-to-b from-amber-950/30 to-slate-900 space-y-4">
         <div className="flex items-center gap-3 text-amber-300">
           <ShieldAlert className="w-6 h-6 shrink-0" />
-          <h3 className="text-lg font-bold">1. Core Educational Safety Mandate (India)</h3>
+          <h3 className="text-lg font-bold">1. Core Educational Safety Mandate (Bengaluru, India)</h3>
         </div>
         <p className="text-sm text-amber-200/90 leading-relaxed">
-          MedSafe AI is strictly an <strong>educational research prototype</strong> developed for software architecture demonstration. <strong>It is NOT a certified medical device</strong> under the Drugs and Cosmetics Act of India and must never be used to diagnose, prescribe, adjust dosages, or alter treatment plans prescribed by registered medical practitioners (RMP) in India.
+          MedSafe AI is strictly an <strong>educational research prototype</strong> developed for software architecture demonstration. <strong>It is NOT a certified medical device</strong> under the Drugs and Cosmetics Act of India and Karnataka State Health Regulations. It must never be used to diagnose, prescribe, adjust dosages, or alter treatment plans prescribed by registered medical practitioners (RMPs) in Bengaluru or across India.
         </p>
         <div className="p-4 bg-slate-950/80 rounded-xl border border-amber-500/30 text-xs text-amber-300 font-mono">
           Mandatory Safety Statement: All unlisted drug combinations in the dataset return exact wording:
@@ -46,74 +46,101 @@ export const LimitationsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Indian Emergency Medical Helplines */}
+      {/* Indian & Bengaluru Emergency Medical Helplines */}
       <div className="glass-panel p-6 border-rose-500/40 bg-gradient-to-r from-rose-950/30 via-slate-900 to-slate-900 space-y-5">
         <div className="flex items-center gap-3 text-rose-300">
           <PhoneCall className="w-6 h-6 shrink-0" />
-          <h3 className="text-lg font-bold text-white">2. Indian National Emergency Medical Numbers</h3>
+          <h3 className="text-lg font-bold text-white">2. Bengaluru & Indian Emergency Medical Phone Numbers</h3>
         </div>
         <p className="text-xs text-rose-200/90 leading-relaxed">
-          If you or someone around you experiences severe drug reaction symptoms, blood in vomit, chest pain, difficulty breathing, sudden severe skin rash, or loss of consciousness, contact Indian emergency medical services immediately.
+          If you or someone around you experiences severe drug reaction symptoms (blood in vomit, acute chest pain, anaphylaxis, severe dyspnea, sudden skin detachment, or loss of consciousness in Bengaluru), contact emergency medical services immediately.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-semibold">
           <div className="bg-slate-950 p-3.5 rounded-xl border border-rose-500/40 text-center space-y-1">
-            <span className="text-slate-400 block text-[10px] uppercase font-mono">National Emergency</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-mono">Namma 112 (Bengaluru ERSS)</span>
             <span className="text-rose-400 text-xl font-bold block">112</span>
-            <span className="text-[10px] text-slate-300 block">Single All-India Emergency Number</span>
+            <span className="text-[10px] text-slate-300 block">Karnataka Emergency Helpline</span>
           </div>
 
           <div className="bg-slate-950 p-3.5 rounded-xl border border-rose-500/40 text-center space-y-1">
-            <span className="text-slate-400 block text-[10px] uppercase font-mono">National Ambulance</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-mono">Arogya Kavacha Ambulance</span>
             <span className="text-rose-400 text-xl font-bold block">108 / 102</span>
-            <span className="text-[10px] text-slate-300 block">Emergency Medical Response</span>
+            <span className="text-[10px] text-slate-300 block">Bengaluru Emergency Medical Response</span>
           </div>
 
           <div className="bg-slate-950 p-3.5 rounded-xl border border-amber-500/40 text-center space-y-1">
-            <span className="text-slate-400 block text-[10px] uppercase font-mono">AIIMS Poison Info</span>
-            <span className="text-amber-300 text-sm font-mono block">1800-116-117</span>
-            <span className="text-[10px] text-slate-300 block">NPIC New Delhi (Toll Free)</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-mono">Victoria Hospital Poison Cell</span>
+            <span className="text-amber-300 text-sm font-mono block">080-26701150</span>
+            <span className="text-[10px] text-slate-300 block">Bengaluru Toxicology / 1056</span>
           </div>
 
           <div className="bg-slate-950 p-3.5 rounded-xl border border-sky-500/40 text-center space-y-1">
-            <span className="text-slate-400 block text-[10px] uppercase font-mono">PvPI CDSCO Helpline</span>
+            <span className="text-slate-400 block text-[10px] uppercase font-mono">PvPI / Karnataka Helpline</span>
             <span className="text-sky-300 text-sm font-mono block">1800-180-3024</span>
             <span className="text-[10px] text-slate-300 block">Adverse Drug Reaction Reporting</span>
           </div>
         </div>
       </div>
 
-      {/* Indian Emergency Medical Centers */}
+      {/* Indian & Bengaluru Emergency Medical Centers */}
       <div className="glass-panel p-6 border-slate-800 space-y-4">
         <div className="flex items-center gap-3 text-sky-400">
           <Hospital className="w-6 h-6 shrink-0" />
-          <h3 className="text-lg font-bold text-white">3. Indian Emergency Medical & Poison Control Centers</h3>
+          <h3 className="text-lg font-bold text-white">3. Bengaluru Emergency Medical & Poison Control Centers</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
           <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
             <h4 className="font-bold text-sky-300 flex items-center gap-1.5">
               <Building2 className="w-4 h-4 text-sky-400" />
-              National Poison Information Centre (NPIC)
+              Victoria Hospital & BMCRI (Toxicology & Emergency Trauma)
             </h4>
             <p className="text-slate-300 leading-relaxed text-[11px]">
-              Department of Pharmacology, All India Institute of Medical Sciences (AIIMS), Ansari Nagar, New Delhi - 110029.
+              Fort, Kalasipalya, near K.R. Market, Bengaluru, Karnataka - 560002. Apex Government Medical College Hospital & Primary Poison Control Unit in Bengaluru.
             </p>
             <div className="font-mono text-slate-400 text-[11px] space-y-0.5 pt-1">
-              <div>Toll-Free: 1800-116-117</div>
-              <div>Direct: 011-26589391 / 011-26593677</div>
+              <div>Casualty & Poison Line: 080-26701150 / 080-26700433</div>
+              <div>Karnataka Health Helpline: 1056 / 080-22183333</div>
             </div>
           </div>
 
           <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
             <h4 className="font-bold text-sky-300 flex items-center gap-1.5">
               <Building2 className="w-4 h-4 text-sky-400" />
-              Apex Government Trauma & Emergency Hospitals
+              NIMHANS (Emergency Neuro & Acute Medical Care)
+            </h4>
+            <p className="text-slate-300 leading-relaxed text-[11px]">
+              Hosur Road, Lakkasandra, Wilson Garden, Bengaluru, Karnataka - 560029. Premier National Institute for Emergency Neuro-Toxicology & Mental Health Crises.
+            </p>
+            <div className="font-mono text-slate-400 text-[11px] space-y-0.5 pt-1">
+              <div>24x7 Emergency Casualty: 080-26995000 / 080-26995555</div>
+              <div>National Tele-MANAS / Crisis Line: 14416</div>
+            </div>
+          </div>
+
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+            <h4 className="font-bold text-sky-300 flex items-center gap-1.5">
+              <Building2 className="w-4 h-4 text-sky-400" />
+              Sri Jayadeva Institute of Cardiovascular Sciences
+            </h4>
+            <p className="text-slate-300 leading-relaxed text-[11px]">
+              Bannerghatta Main Road, Jayanagar 9th Block, Bengaluru, Karnataka - 560069. Premier Apex Cardiac Emergency & Acute Coronary Care Facility.
+            </p>
+            <div className="font-mono text-slate-400 text-[11px] space-y-0.5 pt-1">
+              <div>Cardiac Emergency Desk: 080-22977400 / 080-22977500</div>
+            </div>
+          </div>
+
+          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+            <h4 className="font-bold text-sky-300 flex items-center gap-1.5">
+              <Building2 className="w-4 h-4 text-sky-400" />
+              Major Bengaluru Emergency & Multi-Specialty Hospitals
             </h4>
             <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px] leading-relaxed">
-              <li>AIIMS Emergency Trauma Centre (All India Institutes across States)</li>
-              <li>PGIMER Emergency Care Centre, Chandigarh</li>
-              <li>JIPMER Emergency Department, Puducherry</li>
-              <li>State Government General Hospitals & Medical Colleges</li>
+              <li><strong>Bowring & Lady Curzon Hospital (BMCRI)</strong>, Shivajinagar (Emergency: 080-25591325)</li>
+              <li><strong>St. John's Medical College Hospital</strong>, Sarjapur Road (Emergency: 080-22065000)</li>
+              <li><strong>Manipal Hospital</strong>, HAL Old Airport Rd / Yeshwanthpur (Emergency: 080-25024444)</li>
+              <li><strong>Fortis Hospital</strong>, Bannerghatta Road (Emergency: 105711 / 080-66214444)</li>
             </ul>
           </div>
         </div>
@@ -156,10 +183,10 @@ export const LimitationsPage: React.FC = () => {
       <div className="glass-panel p-6 border-slate-800 space-y-4">
         <div className="flex items-center gap-3 text-teal-400">
           <BookOpen className="w-6 h-6 shrink-0" />
-          <h3 className="text-lg font-bold text-white">5. Indian Regulatory Bodies & Data Provenance</h3>
+          <h3 className="text-lg font-bold text-white">5. Indian & Bengaluru Regulatory Bodies & Data Provenance</h3>
         </div>
         <p className="text-sm text-slate-300 leading-relaxed">
-          MedSafe AI resolves Indian pharmaceutical brand names (Dolo 650, Brufen, Combiflam, Ecosprin, Manforce, Glycomet, Stamlo, Listril, Daxid, Ultracet) to active ingredients. Citations reference <strong>CDSCO</strong> (Central Drugs Standard Control Organization), <strong>IPC</strong> (Indian Pharmacopoeia Commission), and <strong>PvPI</strong> safety bulletins.
+          MedSafe AI resolves Indian pharmaceutical brand names (Dolo 650, Brufen, Combiflam, Ecosprin, Manforce, Glycomet, Stamlo, Listril, Daxid, Ultracet) to active ingredients. Citations reference <strong>CDSCO</strong> (Central Drugs Standard Control Organization), <strong>IPC</strong> (Indian Pharmacopoeia Commission), <strong>PvPI</strong> safety bulletins, and the <strong>Drugs Control Department, Government of Karnataka</strong> (Palace Road, Bengaluru).
         </p>
         <div className="flex flex-wrap gap-3 text-xs">
           <a
@@ -177,6 +204,14 @@ export const LimitationsPage: React.FC = () => {
             className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-sky-400 hover:underline flex items-center gap-1"
           >
             IPC / PvPI Pharmacovigilance Programme <ExternalLink className="w-3 h-3" />
+          </a>
+          <a
+            href="https://dcd.karnataka.gov.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-emerald-400 hover:underline flex items-center gap-1"
+          >
+            Karnataka Drugs Control Dept (Bengaluru) <ExternalLink className="w-3 h-3" />
           </a>
         </div>
       </div>
@@ -205,3 +240,4 @@ export const LimitationsPage: React.FC = () => {
     </div>
   );
 };
+

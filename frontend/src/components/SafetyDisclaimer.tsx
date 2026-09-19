@@ -29,7 +29,7 @@ export const SafetyDisclaimer: React.FC<SafetyDisclaimerProps> = ({ compact = fa
           It does not provide medical diagnoses, treatment advice, or dosage changes. Never stop, start, or alter any medication based on this tool.
         </p>
         <p className="text-xs text-amber-300/80 font-mono pt-1">
-          For medical emergencies in India, call National Emergency <strong>112</strong> / Ambulance <strong>108</strong>, AIIMS National Poison Information Centre (New Delhi) <strong>1800-116-117</strong> / <strong>011-26589391</strong>, or visit your nearest hospital.
+          For medical emergencies in Bengaluru & India, call Namma <strong>112</strong> / Ambulance <strong>108</strong>, Victoria Hospital Poison Response (Bengaluru) <strong>080-26701150</strong> / Health Helpline <strong>1056</strong>, or visit your nearest hospital in Bengaluru.
         </p>
       </div>
     </div>
