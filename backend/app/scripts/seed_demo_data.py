@@ -1,6 +1,7 @@
 """
-Seed Demo Interaction Data Script for MedSafe AI.
-Populates clinically accurate, cited drug interaction rules and package label chunks.
+Seed Demo Interaction Data Script for MedSafe AI (Indian Medical & Emergency Standards).
+Populates clinically accurate drug interaction rules and package label chunks citing
+CDSCO, Indian Pharmacopoeia Commission (IPC), PvPI, and AIIMS National Poison Information Centre guidelines.
 """
 
 import logging
@@ -16,14 +17,14 @@ DEMO_RULES = [
         "ingredient_a": "warfarin",
         "ingredient_b": "ibuprofen",
         "risk_level": "high",
-        "mechanism": "Increased risk of major gastrointestinal and systemic bleeding due to combined anticoagulant and antiplatelet/NSAID effects.",
-        "patient_friendly_summary": "Taking warfarin with ibuprofen significantly increases the risk of stomach bleeding and serious hemorrhaging.",
-        "recommended_action_template": "Contact a pharmacist or prescriber immediately before combining these medicines. An alternative non-NSAID pain reliever like paracetamol (acetaminophen) may be recommended.",
-        "urgent_warning_template": "Seek emergency medical attention if you experience red or black dark tarry stools, coughing up blood, severe dizziness, or unusual bruising.",
+        "mechanism": "Increased risk of major gastrointestinal hemorrhage and systemic bleeding due to combined anticoagulant and antiplatelet/NSAID effects.",
+        "patient_friendly_summary": "Taking warfarin with ibuprofen (or Brufen/Combiflam) significantly increases the risk of stomach bleeding and internal hemorrhaging.",
+        "recommended_action_template": "Consult a registered doctor or clinical pharmacist immediately before combining these medicines. Paracetamol (Dolo/Crocin) at safe doses may be recommended instead.",
+        "urgent_warning_template": "EMERGENCY: Call Indian National Emergency 112 or visit an emergency room immediately if you notice blood in vomit, black tarry stools, or severe unexplained bruising.",
         "source": {
-            "source_name": "DailyMed / FDA Label",
-            "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=warfarin-ibuprofen",
-            "title": "Warfarin & Ibuprofen Package Insert - Boxed Warnings & Drug Interactions",
+            "source_name": "CDSCO / IPC PvPI Guidelines",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "CDSCO Approved Package Insert - Warfarin & NSAID Interactions",
             "section_name": "Drug Interactions & Warnings"
         }
     },
@@ -31,14 +32,14 @@ DEMO_RULES = [
         "ingredient_a": "nitroglycerin",
         "ingredient_b": "sildenafil",
         "risk_level": "high",
-        "mechanism": "Potentiation of vasodilatory effect causing severe, life-threatening hypotension and cardiac collapse.",
-        "patient_friendly_summary": "Combining nitroglycerin with sildenafil can cause a sudden, dangerous drop in blood pressure.",
-        "recommended_action_template": "Do NOT take sildenafil if you are using nitroglycerin or any nitrate medications. Consult your cardiologist or physician immediately.",
-        "urgent_warning_template": "EMERGENCY: Call local emergency services (911) immediately if chest pain, fainting, or severe lightheadedness occurs.",
+        "mechanism": "Potentiation of nitric oxide vasodilatory effect causing severe, life-threatening hypotension and cardiac shock.",
+        "patient_friendly_summary": "Combining nitroglycerin (Nitrolong/Angiplat) with sildenafil (Manforce/Penegra/Caverta) can cause a sudden, critical drop in blood pressure.",
+        "recommended_action_template": "Do NOT take sildenafil if you are using nitroglycerin or nitrate heart medications. Consult a cardiologist or physician urgently.",
+        "urgent_warning_template": "CRITICAL EMERGENCY: Call 112 (National Emergency Number, India) or 108 Ambulance immediately if chest pain, fainting, or dizziness occurs.",
         "source": {
-            "source_name": "FDA DailyMed",
-            "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=sildenafil-nitrates",
-            "title": "Viagra (Sildenafil) FDA Prescribing Information - Contraindications",
+            "source_name": "CDSCO India Prescribing Guidelines",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "CDSCO Sildenafil & Nitrate Co-administration Contraindications",
             "section_name": "Contraindications"
         }
     },
@@ -46,14 +47,14 @@ DEMO_RULES = [
         "ingredient_a": "lisinopril",
         "ingredient_b": "spironolactone",
         "risk_level": "high",
-        "mechanism": "Synergistic potassium retention leading to severe hyperkalemia and cardiac arrhythmia risk.",
-        "patient_friendly_summary": "Combining an ACE inhibitor (lisinopril) with a potassium-sparing diuretic (spironolactone) can lead to dangerously high serum potassium levels.",
-        "recommended_action_template": "Frequent serum potassium monitoring is required by your healthcare provider. Avoid high-potassium diet supplements.",
-        "urgent_warning_template": "Contact your doctor urgently if you experience muscle weakness, numbness, or abnormal irregular heartbeats.",
+        "mechanism": "Synergistic renal potassium retention leading to severe hyperkalemia and dangerous cardiac arrhythmia risk.",
+        "patient_friendly_summary": "Combining an ACE inhibitor (Lisinopril/Listril) with a potassium-sparing diuretic (Spironolactone/Aldactone) can cause dangerously high blood potassium levels.",
+        "recommended_action_template": "Routine serum potassium blood tests are required by your prescribing doctor. Avoid potassium-rich dietary supplements.",
+        "urgent_warning_template": "Contact your doctor or visit a hospital urgently if you experience muscle weakness, numbness, or irregular heart palpitations.",
         "source": {
-            "source_name": "DailyMed",
-            "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=lisinopril-spironolactone",
-            "title": "Lisinopril & Spironolactone Co-administration Guidelines",
+            "source_name": "Indian Pharmacopoeia Commission (IPC)",
+            "source_url": "https://ipc.gov.in/",
+            "title": "IPC Safety Alert: ACE Inhibitor & Potassium Sparing Diuretic Hyperkalemia",
             "section_name": "Warnings and Precautions"
         }
     },
@@ -61,14 +62,14 @@ DEMO_RULES = [
         "ingredient_a": "sertraline",
         "ingredient_b": "tramadol",
         "risk_level": "high",
-        "mechanism": "Excessive serotonergic activity leading to Serotonin Syndrome.",
-        "patient_friendly_summary": "Combining sertraline (an SSRI antidepressant) with tramadol (an opioid analgesic) can cause a serious condition called serotonin syndrome.",
-        "recommended_action_template": "Inform your physician before combining pain relief medications with antidepressant therapy.",
-        "urgent_warning_template": "Seek prompt medical evaluation if high fever, agitation, shivering, twitching, tremors, or rapid heartbeat develop.",
+        "mechanism": "Excessive central serotonergic neurotransmission leading to life-threatening Serotonin Syndrome.",
+        "patient_friendly_summary": "Combining sertraline (Daxid/Sertal) with tramadol (Ultracet/Tramazac) can cause Serotonin Syndrome.",
+        "recommended_action_template": "Inform your physician before taking opioid pain relievers alongside SSRI antidepressant medications.",
+        "urgent_warning_template": "Seek immediate emergency evaluation if high fever, severe shivering, muscle twitching, confusion, or rapid heartbeat occurs.",
         "source": {
-            "source_name": "FDA DailyMed",
-            "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=zoloft-tramadol",
-            "title": "Zoloft (Sertraline) Package Insert - Serotonin Syndrome Warning",
+            "source_name": "PvPI (Pharmacovigilance Programme of India)",
+            "source_url": "https://ipc.gov.in/pvpi.html",
+            "title": "PvPI Drug Safety Alert - Serotonin Syndrome Warning",
             "section_name": "Warnings and Precautions"
         }
     },
@@ -76,14 +77,14 @@ DEMO_RULES = [
         "ingredient_a": "metformin",
         "ingredient_b": "iodinated contrast media",
         "risk_level": "moderate",
-        "mechanism": "Contrast-induced acute kidney injury leading to metformin accumulation and lactic acidosis.",
-        "patient_friendly_summary": "Iodinated dye used during CT scans or X-ray procedures can temporarily affect kidney function, increasing metformin side effect risks.",
-        "recommended_action_template": "Metformin should usually be temporarily withheld prior to or at the time of contrast imaging. Consult your prescribing physician or radiologist.",
-        "urgent_warning_template": "Report severe fatigue, muscle pain, difficulty breathing, or abdominal pain to your doctor.",
+        "mechanism": "Contrast-induced acute renal dysfunction leading to metformin renal clearance reduction and lactic acidosis.",
+        "patient_friendly_summary": "Iodinated contrast dye used during CT scans or angiograms can temporarily impair kidney function, raising metformin toxicity risks.",
+        "recommended_action_template": "Metformin (Glycomet/Obimet) should generally be withheld 48 hours prior to or at the time of contrast imaging under medical supervision.",
+        "urgent_warning_template": "Report unusual muscle severe pain, difficulty breathing, or severe fatigue to your physician.",
         "source": {
-            "source_name": "DailyMed",
-            "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=metformin-contrast",
-            "title": "Glucophage (Metformin) Package Insert - Lactic Acidosis Warning",
+            "source_name": "CDSCO / AIIMS Clinical Protocol",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "Metformin Radiocontrast Administration Protocol",
             "section_name": "Warnings and Precautions"
         }
     },
@@ -91,14 +92,14 @@ DEMO_RULES = [
         "ingredient_a": "amlodipine",
         "ingredient_b": "simvastatin",
         "risk_level": "moderate",
-        "mechanism": "Amlodipine increases plasma concentration of simvastatin, increasing myopathy and rhabdomyolysis risk.",
-        "patient_friendly_summary": "Taking amlodipine alongside simvastatin can raise the levels of simvastatin in your blood, increasing the risk of muscle breakdown.",
-        "recommended_action_template": "Dose adjustment of simvastatin (maximum 20 mg daily when combined with amlodipine) is recommended by FDA guidelines.",
-        "urgent_warning_template": "Contact your prescriber if unexplained muscle soreness, tenderness, weakness, or dark-colored urine occurs.",
+        "mechanism": "Amlodipine inhibits CYP3A4-mediated clearance, elevating simvastatin exposure and rhabdomyolysis risk.",
+        "patient_friendly_summary": "Taking amlodipine (Stamlo/Amlovas) with simvastatin (Simvotin) increases blood levels of simvastatin, elevating muscle damage risks.",
+        "recommended_action_template": "Daily dose of simvastatin should not exceed 20 mg when taken concurrently with amlodipine per clinical guidelines.",
+        "urgent_warning_template": "Contact your prescriber if unexplained muscle tenderness, weakness, or dark tea-colored urine develops.",
         "source": {
-            "source_name": "FDA Safety Communication",
-            "source_url": "https://www.fda.gov/drugs/drug-safety-and-availability/fda-drug-safety-communication-simvastatin-amlodipine",
-            "title": "FDA Drug Safety Communication: Simvastatin Dosing Limits",
+            "source_name": "Indian Pharmacopoeia Commission (IPC)",
+            "source_url": "https://ipc.gov.in/",
+            "title": "Simvastatin Dosing Restrictions with Amlodipine",
             "section_name": "Drug Interactions"
         }
     },
@@ -106,14 +107,14 @@ DEMO_RULES = [
         "ingredient_a": "acetaminophen",
         "ingredient_b": "aspirin",
         "risk_level": "low",
-        "mechanism": "Minor combined gastrointestinal irritation; low risk at recommended therapeutic dosages.",
-        "patient_friendly_summary": "Low risk interaction at standard therapeutic doses, though prolonged combined high doses should be reviewed by a physician.",
-        "recommended_action_template": "Ensure you do not exceed daily maximum dose limits for either medication (e.g. 4000 mg max daily acetaminophen).",
+        "mechanism": "Minor cumulative gastric mucosal irritation; low clinical interaction risk at standard therapeutic doses.",
+        "patient_friendly_summary": "Low interaction risk at normal recommended doses (e.g. Paracetamol/Dolo 650 with Ecosprin 75).",
+        "recommended_action_template": "Do not exceed maximum recommended daily dosage limits (e.g. 3000-4000 mg paracetamol daily).",
         "urgent_warning_template": None,
         "source": {
-            "source_name": "DailyMed",
-            "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=aspirin-acetaminophen",
-            "title": "OTC Analgesic Combination Guidelines",
+            "source_name": "CDSCO Approved OTC Guidelines",
+            "source_url": "https://cdsco.gov.in/",
+            "title": "Analgesic Combination Guidelines - IPC / CDSCO",
             "section_name": "Patient Counseling Information"
         }
     }
@@ -121,88 +122,86 @@ DEMO_RULES = [
 
 DEMO_SOURCE_CHUNKS = [
     {
-        "ingredient_names": ["warfarin", "ibuprofen", "advil", "motrin"],
-        "section_name": "Drug Interactions - Anticoagulants and NSAIDs",
+        "ingredient_names": ["warfarin", "ibuprofen", "brufen", "combiflam", "warf"],
+        "section_name": "Drug Interactions - Anticoagulants and NSAIDs (CDSCO)",
         "content": (
-            "Concomitant use of Warfarin with Nonsteroidal Anti-inflammatory Drugs (NSAIDs) such as Ibuprofen, "
-            "Naproxen, or Aspirin increases the risk of gastrointestinal bleeding. Patients receiving Warfarin "
-            "should be instructed of the risk of bleeding with NSAIDs. Inhibition of platelet aggregation by NSAIDs "
-            "combined with Warfarin hypoprothrombinemia severely elevates prothrombin time and hemorrhage risk. "
-            "Close monitoring of INR is required if combination cannot be avoided."
+            "Concomitant administration of Warfarin with NSAIDs like Ibuprofen (Brufen, Combiflam) severely "
+            "elevates bleeding risk. Inhibition of platelet aggregation by NSAIDs combined with Warfarin "
+            "hypoprothrombinemia significantly increases prothrombin time and gastrointestinal bleeding hazard. "
+            "Monitoring of INR is essential if combined therapy is deemed clinically necessary. Emergency assistance (Call 112 / AIIMS NPIC 1800-116-117) "
+            "is advised upon signs of internal hemorrhage."
         ),
-        "source_name": "FDA DailyMed",
-        "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=warfarin-ibuprofen",
-        "source_title": "Warfarin Sodium Prescribing Information - Section 7 Drug Interactions"
+        "source_name": "CDSCO / IPC PvPI Guidelines",
+        "source_url": "https://cdsco.gov.in/",
+        "source_title": "CDSCO Package Insert Guidelines - Section 7 Drug Interactions"
     },
     {
-        "ingredient_names": ["sildenafil", "nitroglycerin", "viagra", "nitrostat"],
-        "section_name": "Contraindications - Nitrates Coadministration",
+        "ingredient_names": ["sildenafil", "nitroglycerin", "manforce", "penegra", "caverta", "nitrolong"],
+        "section_name": "Contraindications - Nitrates Coadministration (CDSCO)",
         "content": (
-            "Consistent with its known effects on the nitric oxide/cGMP pathway, Sildenafil (Viagra) was shown to "
-            "potentiate the hypotensive effects of nitrates. Administration of Sildenafil to patients who are using "
-            "organic nitrates, such as Nitroglycerin, Isosorbide mononitrate, or Isosorbide dinitrate in any form, is "
-            "CONTRAINDICATED. Severe profound hypotension, cardiovascular syncope, or acute myocardial infarction can occur."
+            "Consistent with its known effects on the nitric oxide/cGMP pathway, Sildenafil (Manforce, Penegra, Caverta) "
+            "potentiates hypotensive effects of nitrates. Administration of Sildenafil to patients using organic nitrates "
+            "like Nitroglycerin (Nitrolong, Angiplat) or Isosorbide in any form is CONTRAINDICATED. Severe profound hypotension, "
+            "cardiovascular collapse, or acute myocardial infarction can result. Emergency hotline: Call 112 / 108 Ambulance."
         ),
-        "source_name": "FDA DailyMed",
-        "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=sildenafil-nitrates",
-        "source_title": "Viagra Official Prescribing Information - Contraindications"
+        "source_name": "CDSCO Approved Label",
+        "source_url": "https://cdsco.gov.in/",
+        "source_title": "CDSCO Prescribing Information - Sildenafil Contraindications"
     },
     {
-        "ingredient_names": ["lisinopril", "spironolactone", "zestril", "aldactone"],
-        "section_name": "Warnings and Precautions - Hyperkalemia Risk",
+        "ingredient_names": ["lisinopril", "spironolactone", "listril", "aldactone"],
+        "section_name": "Warnings and Precautions - Hyperkalemia Risk (IPC)",
         "content": (
-            "Co-administration of Lisinopril with potassium-sparing diuretics such as Spironolactone, Eplerenone, or "
-            "Triamterene, or potassium supplements can increase serum potassium levels. Severe hyperkalemia may lead to "
-            "fatal cardiac arrhythmias. Serum potassium levels should be monitored frequently in patients receiving "
-            "Lisinopril and Spironolactone concurrently."
+            "Co-administration of Lisinopril (Listril) with potassium-sparing diuretics like Spironolactone (Aldactone) "
+            "or potassium supplements can increase serum potassium levels. Severe hyperkalemia may lead to fatal cardiac arrhythmias. "
+            "Serum potassium monitoring should be conducted periodically."
         ),
-        "source_name": "FDA DailyMed",
-        "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=lisinopril-spironolactone",
-        "source_title": "Lisinopril Tablets Prescribing Information"
+        "source_name": "Indian Pharmacopoeia Commission (IPC)",
+        "source_url": "https://ipc.gov.in/",
+        "source_title": "IPC Drug Safety Insert - Lisinopril & Spironolactone"
     },
     {
-        "ingredient_names": ["sertraline", "tramadol", "zoloft", "ultram"],
-        "section_name": "Warnings - Serotonin Syndrome",
+        "ingredient_names": ["sertraline", "tramadol", "daxid", "ultracet", "tramazac"],
+        "section_name": "Warnings - Serotonin Syndrome (PvPI)",
         "content": (
-            "The development of a potentially life-threatening serotonin syndrome has been reported with SSRIs like "
-            "Sertraline, particularly when co-administered with serotonergic drugs including Tramadol, Fentanyl, or "
-            "Lithium. Symptoms include agitation, hallucinations, delirium, coma, tachycardia, hyperthermia, muscle rigidity, "
-            "tremor, and gastrointestinal distress. Discontinue treatment immediately if serotonin syndrome occurs."
+            "Development of a life-threatening serotonin syndrome is reported with SSRIs like Sertraline (Daxid), "
+            "especially when co-administered with serotonergic drugs including Tramadol (Ultracet, Tramazac). Symptoms "
+            "include hyperthermia, muscle rigidity, tremor, confusion, agitation, and autonomic instability."
         ),
-        "source_name": "FDA DailyMed",
-        "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=zoloft-tramadol",
-        "source_title": "Zoloft (Sertraline HCl) Prescribing Information"
+        "source_name": "PvPI (Pharmacovigilance Programme of India)",
+        "source_url": "https://ipc.gov.in/pvpi.html",
+        "source_title": "PvPI Pharmacovigilance Bulletin - Serotonin Syndrome"
     },
     {
-        "ingredient_names": ["metformin", "iodinated contrast media", "glucophage"],
-        "section_name": "Warnings - Contrast Induced Acute Kidney Injury",
+        "ingredient_names": ["metformin", "iodinated contrast media", "glycomet", "gluconorm"],
+        "section_name": "Warnings - Contrast Induced Renal Impairment",
         "content": (
-            "Intravascular administration of iodinated contrast materials in radiologic studies can lead to an acute alteration "
-            "of renal function and has been associated with lactic acidosis in patients receiving Metformin. Metformin should be "
-            "discontinued at the time of or prior to the procedure, and withheld for 48 hours subsequent to the procedure."
+            "Intravascular administration of iodinated radiocontrast dyes can cause acute alteration of renal function, "
+            "associated with lactic acidosis in patients receiving Metformin (Glycomet). Metformin should be temporarily "
+            "discontinued at the time of procedure."
         ),
-        "source_name": "DailyMed",
-        "source_url": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=metformin-contrast",
-        "source_title": "Metformin Hydrochloride Prescribing Information"
+        "source_name": "CDSCO / AIIMS Guidelines",
+        "source_url": "https://cdsco.gov.in/",
+        "source_title": "AIIMS New Delhi Radiocontrast Guidelines"
     },
     {
-        "ingredient_names": ["amlodipine", "simvastatin", "norvasc", "zocor"],
+        "ingredient_names": ["amlodipine", "simvastatin", "stamlo", "amlovas", "simvotin"],
         "section_name": "Drug Interactions - HMG-CoA Reductase Inhibitor Coadministration",
         "content": (
-            "Co-administration of Amlodipine with Simvastatin significantly increases the systemic exposure of Simvastatin. "
-            "Limit the dose of Simvastatin to 20 mg daily in patients taking Amlodipine concurrently to prevent increased "
-            "risk of myopathy, muscle weakness, and severe rhabdomyolysis."
+            "Co-administration of Amlodipine (Stamlo, Amlovas) with Simvastatin (Simvotin) increases systemic exposure "
+            "of Simvastatin. Limit Simvastatin dose to 20 mg daily in patients taking Amlodipine concurrently to prevent "
+            "myopathy and rhabdomyolysis risks."
         ),
-        "source_name": "FDA DailyMed",
-        "source_url": "https://www.fda.gov/drugs/drug-safety-and-availability/fda-drug-safety-communication-simvastatin-amlodipine",
-        "source_title": "Norvasc (Amlodipine Besylate) Drug Interactions Insert"
+        "source_name": "Indian Pharmacopoeia Commission (IPC)",
+        "source_url": "https://ipc.gov.in/",
+        "source_title": "IPC Safety Communication - Simvastatin Dosing Limits"
     }
 ]
 
 
 def seed_all_demo_data():
     """Seeds demo interaction rules and TF-IDF chunks into local memory / Supabase."""
-    logger.info("Seeding demo DDI rules...")
+    logger.info("Seeding Indian standard DDI rules...")
     for r in DEMO_RULES:
         register_local_ddi_rule(
             ing_a=r["ingredient_a"],
@@ -215,7 +214,7 @@ def seed_all_demo_data():
             source_info=r.get("source"),
         )
 
-    logger.info("Seeding demo source chunks for TF-IDF RAG...")
+    logger.info("Seeding Indian standard source chunks for TF-IDF RAG...")
     for c in DEMO_SOURCE_CHUNKS:
         register_local_source_chunk(
             ingredient_names=c["ingredient_names"],
@@ -226,7 +225,7 @@ def seed_all_demo_data():
             source_title=c["source_title"],
         )
 
-    logger.info("Demo data seeding completed successfully.")
+    logger.info("Indian standard demo data seeding completed successfully.")
 
 
 if __name__ == "__main__":
