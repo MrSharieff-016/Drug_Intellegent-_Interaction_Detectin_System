@@ -299,6 +299,20 @@ def evaluate_pharmacological_class_rules(
             evidence=[EvidenceCitation(source_name="PvPI Drug Alert", source_url="https://ipc.gov.in/pvpi.html", label_section="Serotonergic Safety", excerpt="Co-administration of SSRIs with serotonergic agents risks Serotonin Syndrome.")]
         )
 
+    # 6. Statin + Strong CYP3A4 Inhibitor
+    if (is_statin(text_a) and is_cyp3a4_inhibitor(text_b)) or (is_statin(text_b) and is_cyp3a4_inhibitor(text_a)):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Severe Rhabdomyolysis & Muscle Toxicity Hazard",
+            plain_explanation=f"Combining {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} blocks statin clearance, risking severe muscle breakdown.",
+            why_it_matters="CYP3A4 inhibition elevates statin systemic exposure by up to 10-fold, predisposing to acute renal failure.",
+            recommended_action="Suspend statin therapy temporarily during short-term azole or macrolide antibiotic courses.",
+            urgent_warning="EMERGENCY: Contact your doctor if unexplained muscle pain, tenderness, or dark brown urine develops.",
+            evidence=[EvidenceCitation(source_name="IPC Safety Alert", source_url="https://ipc.gov.in/", label_section="Statin Myopathy", excerpt="Concomitant strong CYP3A4 inhibitors increase statin myopathy risks.")]
+        )
+
     # 7. Anticoagulants + NSAIDs / Aspirin
     if (is_anticoagulant(text_a) and is_nsaid(text_b)) or (is_anticoagulant(text_b) and is_nsaid(text_a)):
         return PairResult(
@@ -381,6 +395,48 @@ def evaluate_pharmacological_class_rules(
             recommended_action="Monitor ECG and heart rate closely. Dose adjustment required.",
             urgent_warning="EMERGENCY: Seek medical care if pulse drops below 50 bpm, or if dizziness and fainting occur.",
             evidence=[EvidenceCitation(source_name="IPC Guidelines", source_url="https://ipc.gov.in/", label_section="Cardiac Conduction", excerpt="Additive cardiodepression risks sinus arrest and complete heart block.")]
+        )
+
+    # 13. Ciprofloxacin + Theophylline
+    if ("ciprofloxacin" in text_a and "theophylline" in text_b) or ("ciprofloxacin" in text_b and "theophylline" in text_a):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="high",
+            title="Theophylline Toxicity Hazard (CYP1A2 Inhibition)",
+            plain_explanation=f"Combining {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} elevates blood theophylline levels to toxic thresholds.",
+            why_it_matters="Ciprofloxacin strongly inhibits hepatic CYP1A2 metabolism, reducing theophylline clearance by over 50%.",
+            recommended_action="Reduce theophylline dose by 50% or choose an alternative antibiotic. Monitor serum theophylline levels.",
+            urgent_warning="EMERGENCY: Contact doctor immediately if experiencing severe nausea, seizures, or rapid irregular heartbeat.",
+            evidence=[EvidenceCitation(source_name="CDSCO Drug Alert", source_url="https://cdsco.gov.in/", label_section="CYP1A2 Drug Safety", excerpt="Ciprofloxacin inhibits theophylline clearance.")]
+        )
+
+    # 14. Amlodipine + Simvastatin
+    if ("amlodipine" in text_a and "simvastatin" in text_b) or ("amlodipine" in text_b and "simvastatin" in text_a):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="moderate",
+            title="Increased Simvastatin Myopathy Risk",
+            plain_explanation=f"Taking {med_a.canonical_name.capitalize()} with {med_b.canonical_name.capitalize()} increases simvastatin concentrations in the blood.",
+            why_it_matters="Amlodipine inhibits CYP3A4-mediated hepatic breakdown of simvastatin.",
+            recommended_action="Limit simvastatin dosage to a maximum of 20 mg daily when taken concurrently with amlodipine.",
+            urgent_warning=None,
+            evidence=[EvidenceCitation(source_name="IPC Guidelines", source_url="https://ipc.gov.in/", label_section="Statin Safety", excerpt="Amlodipine increases simvastatin exposure.")]
+        )
+
+    # 15. Warfarin + High-Dose Paracetamol
+    if (is_anticoagulant(text_a) and "acetaminophen" in text_b) or (is_anticoagulant(text_b) and "acetaminophen" in text_a):
+        return PairResult(
+            medicine_a=med_a.canonical_name,
+            medicine_b=med_b.canonical_name,
+            risk_level="moderate",
+            title="Enhanced Anticoagulant Effect (INR Elevation)",
+            plain_explanation=f"Regular or high-dose {med_b.canonical_name.capitalize()} taken with {med_a.canonical_name.capitalize()} can increase INR levels and bleeding risk.",
+            why_it_matters="Acetaminophen metabolite (NAPQI) inhibits vitamin K oxidoreductase enzyme cycle.",
+            recommended_action="Monitor INR closely if taking paracetamol regularly for more than 3 consecutive days.",
+            urgent_warning=None,
+            evidence=[EvidenceCitation(source_name="PvPI Bulletin", source_url="https://ipc.gov.in/", label_section="Anticoagulation", excerpt="Regular acetaminophen elevates INR in patients on warfarin.")]
         )
 
     # 13. Default Dynamic Fallback for any other valid drug combination

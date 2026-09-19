@@ -241,7 +241,7 @@ async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
         )
 
     # 1b. Fuzzy match against local canonical dictionary for typos (e.g. "ibprophen", "lithum")
-    close_matches = difflib.get_close_matches(sanitized, KNOWN_CANONICAL_MAP.keys(), n=1, cutoff=0.78)
+    close_matches = difflib.get_close_matches(sanitized, KNOWN_CANONICAL_MAP.keys(), n=1, cutoff=0.65)
     if close_matches:
         match_key = close_matches[0]
         rxcui, canonical, syns = KNOWN_CANONICAL_MAP[match_key]
