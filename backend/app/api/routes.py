@@ -69,10 +69,13 @@ async def analyze_medications(
     normalized_list: List[NormalizedMedication] = []
     unresolved_list = []
 
+    logger.info(f"=== ANALYZE REQUEST: Raw input medications: {[m.name for m in payload.medications]} ===")
+
     for item in payload.medications:
         norm = await normalize_medication_name(item.name)
         if norm:
             normalized_list.append(norm)
+            logger.info(f"Normalized: '{item.name}' -> canonical='{norm.canonical_name}', rxcui='{norm.rxcui}', synonyms={norm.synonyms}")
         else:
             unresolved_list.append({
                 "entered_name": item.name,
@@ -104,6 +107,7 @@ async def analyze_medications(
 
     # 2. Generate canonical alphabetical pairs
     pairs = generate_canonical_pairs(normalized_list)
+    logger.info(f"Generated {len(pairs)} canonical pair(s): {[(a.canonical_name, b.canonical_name) for a, b in pairs]}")
     pair_results: List[PairResult] = []
     confidence_scores: List[float] = []
 
@@ -131,7 +135,9 @@ async def analyze_medications(
                         "source_url": "https://cdsco.gov.in/",
                         "title": ai_result.title,
                         "section_name": "AI Dynamic Drug Interaction Evaluation"
-                    }
+                    },
+                    rxcui_a=med_a.rxcui,
+                    rxcui_b=med_b.rxcui,
                 )
 
         # Retrieve evidence snippets via TF-IDF
@@ -147,6 +153,7 @@ async def analyze_medications(
                 base_result.evidence.append(cit)
                 existing_urls.add(cit.source_url)
 
+        logger.info(f"Pair [{med_a.canonical_name} + {med_b.canonical_name}] result: risk='{base_result.risk_level}', title='{base_result.title}', tfidf_conf={conf}")
         pair_results.append(base_result)
 
     # 4. Overall risk = highest severity among pairs
@@ -159,6 +166,8 @@ async def analyze_medications(
         pair_results=pair_results,
         overall_risk=overall_risk
     )
+
+    logger.info(f"=== FINAL ANALYSIS RESULT: overall_risk='{overall_risk}', avg_tfidf_confidence={avg_confidence} ===")
 
     response = AnalyzeResponse(
         analysis_id=analysis_id,

@@ -69,6 +69,69 @@ def test_analyze_unknown_pair():
     assert pair["plain_explanation"] == "No known interaction was found in this prototype dataset. This does not confirm that the combination is safe."
 
 
+def test_analyze_aspirin_warfarin_and_reversed_order():
+    # Test 1: Aspirin + Warfarin
+    resp_1 = client.post("/api/analyze", json={
+        "medications": [
+            {"name": "Aspirin", "strength": "75 mg", "route": "Oral"},
+            {"name": "Warfarin", "strength": "5 mg", "route": "Oral"}
+        ]
+    })
+    assert resp_1.status_code == 200
+    data_1 = resp_1.json()
+    assert data_1["overall_risk"] == "high"
+    assert len(data_1["pair_results"]) == 1
+    assert data_1["pair_results"][0]["risk_level"] == "high"
+
+    # Test 2: Warfarin + Aspirin (Reversed order)
+    resp_2 = client.post("/api/analyze", json={
+        "medications": [
+            {"name": "Warfarin", "strength": "5 mg", "route": "Oral"},
+            {"name": "Aspirin", "strength": "75 mg", "route": "Oral"}
+        ]
+    })
+    assert resp_2.status_code == 200
+    data_2 = resp_2.json()
+    assert data_2["overall_risk"] == "high"
+    assert data_1["pair_results"][0]["risk_level"] == data_2["pair_results"][0]["risk_level"]
+
+
+def test_analyze_all_demo_pairs_via_api():
+    # Sildenafil + Nitroglycerin
+    resp = client.post("/api/analyze", json={
+        "medications": [{"name": "Sildenafil"}, {"name": "Nitroglycerin"}]
+    })
+    assert resp.status_code == 200 and resp.json()["overall_risk"] == "high"
+
+    # Lisinopril + Spironolactone
+    resp = client.post("/api/analyze", json={
+        "medications": [{"name": "Lisinopril"}, {"name": "Spironolactone"}]
+    })
+    assert resp.status_code == 200 and resp.json()["overall_risk"] == "high"
+
+    # Aspirin + Paracetamol
+    resp = client.post("/api/analyze", json={
+        "medications": [{"name": "Aspirin"}, {"name": "Paracetamol"}]
+    })
+    assert resp.status_code == 200 and resp.json()["overall_risk"] == "low"
+
+
+def test_analyze_multi_medications_three_drugs():
+    payload = {
+        "medications": [
+            {"name": "Aspirin 75mg"},
+            {"name": "Warfarin 5mg"},
+            {"name": "Paracetamol 500mg"}
+        ]
+    }
+    resp = client.post("/api/analyze", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    # 3 medications generate 3 unique pairs: (aspirin, warfarin), (acetaminophen, aspirin), (acetaminophen, warfarin)
+    assert len(data["pair_results"]) == 3
+    assert data["overall_risk"] == "high"
+
+
 def test_feedback_submission():
     analyze_resp = client.post("/api/analyze", json={
         "medications": [
@@ -86,3 +149,4 @@ def test_feedback_submission():
     fb_resp = client.post("/api/feedback", json=feedback_payload)
     assert fb_resp.status_code == 200
     assert fb_resp.json()["status"] == "success"
+

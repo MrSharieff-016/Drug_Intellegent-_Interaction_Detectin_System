@@ -333,19 +333,27 @@ DEMO_SOURCE_CHUNKS = [
 ]
 
 
+from app.services.rxnorm_service import KNOWN_CANONICAL_MAP
+
 def seed_all_demo_data():
     """Seeds demo interaction rules and TF-IDF chunks into local memory / Supabase."""
     logger.info("Seeding Indian standard DDI rules...")
     for r in DEMO_RULES:
+        ing_a = r["ingredient_a"]
+        ing_b = r["ingredient_b"]
+        rxcui_a = KNOWN_CANONICAL_MAP.get(ing_a.lower(), (None, None, []))[0]
+        rxcui_b = KNOWN_CANONICAL_MAP.get(ing_b.lower(), (None, None, []))[0]
         register_local_ddi_rule(
-            ing_a=r["ingredient_a"],
-            ing_b=r["ingredient_b"],
+            ing_a=ing_a,
+            ing_b=ing_b,
             risk_level=r["risk_level"],
             mechanism=r["mechanism"],
             patient_friendly_summary=r["patient_friendly_summary"],
             recommended_action_template=r["recommended_action_template"],
             urgent_warning_template=r.get("urgent_warning_template"),
             source_info=r.get("source"),
+            rxcui_a=rxcui_a,
+            rxcui_b=rxcui_b,
         )
 
     logger.info("Seeding Indian standard source chunks for TF-IDF RAG...")

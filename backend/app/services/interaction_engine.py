@@ -66,27 +66,67 @@ def generate_canonical_pairs(medications: List[NormalizedMedication]) -> List[Tu
     return pairs
 
 
+from app.services.database_service import get_ddi_rule, get_ddi_rule_by_rxcui
+from app.services.rxnorm_service import sanitize_medication_name
+
+
 def evaluate_pair_interaction(med_a: NormalizedMedication, med_b: NormalizedMedication) -> PairResult:
     """
-    Evaluates a single pair of normalized medications against curated database rules.
-    Returns deterministic PairResult.
+    Evaluates a single pair of normalized medications using a multi-tiered detection pipeline:
+    Tier 1: Exact RxCUI pair lookup
+    Tier 2: Primary canonical ingredient name pair lookup
+    Tier 3: Secondary synonym / alias cross-match
+    Tier 4: Unknown fallback with strict non-safety disclaimer
     """
     ing_a = med_a.canonical_name.strip().lower()
     ing_b = med_b.canonical_name.strip().lower()
 
-    # Always ensure ing_a < ing_b
-    if ing_a > ing_b:
-        ing_a, ing_b = ing_b, ing_a
-        med_a, med_b = med_b, med_a
+    rule = None
+    match_tier = None
 
-    # Lookup rule in database / local store
-    rule = get_ddi_rule(ing_a, ing_b)
+    # Tier 1: Exact RxCUI pair lookup
+    if med_a.rxcui and med_b.rxcui:
+        rule = get_ddi_rule_by_rxcui(med_a.rxcui, med_b.rxcui)
+        if rule:
+            match_tier = f"Tier 1 (RxCUI Pair {med_a.rxcui}|{med_b.rxcui})"
+
+    # Tier 2: Primary canonical ingredient pair lookup
+    if not rule:
+        rule = get_ddi_rule(ing_a, ing_b)
+        if rule:
+            match_tier = f"Tier 2 (Canonical Name Pair {ing_a}|{ing_b})"
+
+    # Tier 3: Secondary synonym / alias cross-matching
+    if not rule:
+        cands_a = {ing_a, sanitize_medication_name(med_a.entered_name)}
+        if hasattr(med_a, "synonyms") and med_a.synonyms:
+            cands_a.update([sanitize_medication_name(s) for s in med_a.synonyms if s])
+
+        cands_b = {ing_b, sanitize_medication_name(med_b.entered_name)}
+        if hasattr(med_b, "synonyms") and med_b.synonyms:
+            cands_b.update([sanitize_medication_name(s) for s in med_b.synonyms if s])
+
+        cands_a.discard("")
+        cands_b.discard("")
+
+        for ca in cands_a:
+            for cb in cands_b:
+                if ca == cb:
+                    continue
+                found = get_ddi_rule(ca, cb)
+                if found:
+                    rule = found
+                    match_tier = f"Tier 3 (Synonym Cross-Match '{ca}' | '{cb}')"
+                    break
+            if rule:
+                break
 
     if rule:
+        logger.info(f"Interaction matched for [{med_a.canonical_name}] + [{med_b.canonical_name}] via {match_tier}")
         risk_level = rule.get("risk_level", "unknown").lower()
         title = rule.get("mechanism", f"Interaction between {ing_a} and {ing_b}")
         plain_exp = rule.get("patient_friendly_summary", "A potential interaction exists between these medicines.")
-        why_matters = f"Combining {ing_a} and {ing_b} can lead to adverse pharmacological effects."
+        why_matters = f"Combining {med_a.canonical_name} and {med_b.canonical_name} can lead to adverse pharmacological effects."
         recommended_action = rule.get(
             "recommended_action_template",
             "Contact a pharmacist or prescriber before combining these medicines."
@@ -118,6 +158,7 @@ def evaluate_pair_interaction(med_a: NormalizedMedication, med_b: NormalizedMedi
             evidence=evidence_list,
         )
 
+    logger.info(f"No structured rule matched for [{med_a.canonical_name}] + [{med_b.canonical_name}]. Returning unknown status.")
     # UNKNOWN RESULT (No rule found in prototype dataset)
     return PairResult(
         medicine_a=med_a.canonical_name,

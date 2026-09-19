@@ -4,6 +4,7 @@ Integrates with NIH RxNav API to resolve Indian & Global brand/generic names to 
 Includes comprehensive local dictionary fallback mapping popular Indian brand names (Dolo 650, Brufen, Combiflam, Manforce, Ecosprin, etc.).
 """
 
+import re
 import logging
 import httpx
 from typing import List, Dict, Optional, Tuple
@@ -12,108 +13,194 @@ from app.schemas.request_response import NormalizedMedication, SuggestionItem
 
 logger = logging.getLogger("medsafe.rxnorm")
 
+
+def sanitize_medication_name(raw_name: str) -> str:
+    """
+    Cleans raw medication name input by stripping strengths (e.g. 75mg, 5 mg, 500mcg),
+    dosage forms (oral, tablet, capsule, tab, cap, iv, injection, solution),
+    punctuation, and extra whitespace.
+    """
+    if not raw_name:
+        return ""
+
+    clean = raw_name.lower().strip()
+
+    # Remove dosage strengths & units like "75 mg", "5mg", "500 mcg", "10 ml", "5%"
+    clean = re.sub(r'\b\d+(\.\d+)?\s*(mg|mcg|g|ml|l|unit|units|iu|%)\b', '', clean)
+    # Remove standalone numbers like "650", "400", "75"
+    clean = re.sub(r'\b\d+\b', '', clean)
+    # Remove common dosage forms & route keywords
+    forms = [
+        "oral", "tablet", "tablets", "tab", "capsule", "capsules", "cap", "injection",
+        "iv", "im", "topical", "syrup", "solution", "suspension", "drops", "sublingual",
+        "patch", "cream", "ointment", "gel", "inhaler", "spray"
+    ]
+    pattern = r'\b(' + '|'.join(forms) + r')\b'
+    clean = re.sub(pattern, '', clean)
+
+    # Remove non-alphanumeric characters except spaces
+    clean = re.sub(r'[^a-z0-9\s]', ' ', clean)
+    # Collapse whitespace
+    clean = re.sub(r'\s+', ' ', clean).strip()
+    return clean
+
+
 # Comprehensive canonical dictionary including popular Indian brand names & global drugs
 KNOWN_CANONICAL_MAP: Dict[str, Tuple[str, str, List[str]]] = {
     # Warfarin
-    "warfarin": ("11289", "warfarin", ["Coumadin", "Jantoven", "Warf", "Uniwarf"]),
-    "coumadin": ("11289", "warfarin", ["Warfarin Sodium"]),
-    "jantoven": ("11289", "warfarin", ["Warfarin"]),
-    "warf": ("11289", "warfarin", ["Warfarin Sodium (India)"]),
+    "warfarin": ("11289", "warfarin", ["coumadin", "jantoven", "warf", "uniwarf", "warfarin sodium"]),
+    "warfarin sodium": ("11289", "warfarin", ["coumadin", "jantoven", "warf", "uniwarf"]),
+    "coumadin": ("11289", "warfarin", ["warfarin", "jantoven", "warf"]),
+    "jantoven": ("11289", "warfarin", ["warfarin", "coumadin"]),
+    "warf": ("11289", "warfarin", ["warfarin", "coumadin"]),
 
     # Ibuprofen / NSAIDs
-    "ibuprofen": ("5640", "ibuprofen", ["Advil", "Motrin", "Brufen", "Combiflam", "Ibugesic"]),
-    "advil": ("5640", "ibuprofen", ["Advil Liqui-Gels", "Ibuprofen"]),
-    "motrin": ("5640", "ibuprofen", ["Motrin IB", "Ibuprofen"]),
-    "brufen": ("5640", "ibuprofen", ["Brufen 400mg (Abbott India)", "Ibuprofen"]),
-    "combiflam": ("5640", "ibuprofen", ["Combiflam (Ibuprofen + Paracetamol Sanofi India)"]),
-    "ibugesic": ("5640", "ibuprofen", ["Ibugesic (Cipla India)"]),
+    "ibuprofen": ("5640", "ibuprofen", ["advil", "motrin", "brufen", "combiflam", "ibugesic"]),
+    "advil": ("5640", "ibuprofen", ["ibuprofen", "motrin", "brufen"]),
+    "motrin": ("5640", "ibuprofen", ["ibuprofen", "advil", "brufen"]),
+    "brufen": ("5640", "ibuprofen", ["ibuprofen", "advil", "combiflam"]),
+    "combiflam": ("5640", "ibuprofen", ["ibuprofen", "brufen", "paracetamol"]),
+    "ibugesic": ("5640", "ibuprofen", ["ibuprofen", "brufen"]),
 
     # Aspirin
-    "aspirin": ("1191", "aspirin", ["Bayer Aspirin", "Ecosprin", "Disprin", "Acetylsalicylic Acid"]),
-    "ecosprin": ("1191", "aspirin", ["Ecosprin 75/150 (USV India)", "Aspirin"]),
-    "disprin": ("1191", "aspirin", ["Disprin Soluble (Reckitt Benckiser India)"]),
+    "aspirin": ("1191", "aspirin", ["acetylsalicylic acid", "ecosprin", "disprin", "bayer aspirin"]),
+    "acetylsalicylic acid": ("1191", "aspirin", ["aspirin", "ecosprin", "disprin"]),
+    "ecosprin": ("1191", "aspirin", ["aspirin", "acetylsalicylic acid", "disprin"]),
+    "disprin": ("1191", "aspirin", ["aspirin", "ecosprin"]),
+    "bayer aspirin": ("1191", "aspirin", ["aspirin"]),
 
     # Paracetamol / Acetaminophen
-    "paracetamol": ("161", "acetaminophen", ["Dolo 650", "Crocin", "Calpol", "Metacin", "Tylenol", "Panadol"]),
-    "acetaminophen": ("161", "acetaminophen", ["Dolo 650", "Crocin", "Calpol", "Tylenol"]),
-    "dolo 650": ("161", "acetaminophen", ["Dolo 650 mg (Micro Labs India)"]),
-    "dolo": ("161", "acetaminophen", ["Dolo 650 mg (Micro Labs India)"]),
-    "crocin": ("161", "acetaminophen", ["Crocin 650 / Advance (GSK India)"]),
-    "calpol": ("161", "acetaminophen", ["Calpol 500/650 (GSK India)"]),
-    "tylenol": ("161", "acetaminophen", ["Extra Strength Tylenol"]),
+    "paracetamol": ("161", "acetaminophen", ["acetaminophen", "dolo", "dolo 650", "crocin", "calpol", "tylenol", "panadol", "metacin"]),
+    "acetaminophen": ("161", "acetaminophen", ["paracetamol", "dolo", "dolo 650", "crocin", "calpol", "tylenol", "panadol"]),
+    "dolo": ("161", "acetaminophen", ["paracetamol", "acetaminophen", "crocin"]),
+    "dolo 650": ("161", "acetaminophen", ["paracetamol", "acetaminophen", "crocin"]),
+    "crocin": ("161", "acetaminophen", ["paracetamol", "acetaminophen", "dolo"]),
+    "calpol": ("161", "acetaminophen", ["paracetamol", "acetaminophen"]),
+    "tylenol": ("161", "acetaminophen", ["paracetamol", "acetaminophen"]),
+    "panadol": ("161", "acetaminophen", ["paracetamol", "acetaminophen"]),
 
     # Sildenafil / Nitrates
-    "sildenafil": ("10008", "sildenafil", ["Viagra", "Manforce", "Penegra", "Caverta", "Revatio"]),
-    "viagra": ("10008", "sildenafil", ["Sildenafil Pfizer"]),
-    "manforce": ("10008", "sildenafil", ["Manforce 50/100 (Mankind Pharma India)"]),
-    "penegra": ("10008", "sildenafil", ["Penegra (Zydus Cadila India)"]),
-    "caverta": ("10008", "sildenafil", ["Caverta (Sun Pharma India)"]),
+    "sildenafil": ("10008", "sildenafil", ["viagra", "manforce", "penegra", "caverta", "revatio", "sildenafil citrate"]),
+    "sildenafil citrate": ("10008", "sildenafil", ["viagra", "manforce", "penegra"]),
+    "viagra": ("10008", "sildenafil", ["sildenafil", "manforce"]),
+    "manforce": ("10008", "sildenafil", ["sildenafil", "viagra"]),
+    "penegra": ("10008", "sildenafil", ["sildenafil", "manforce"]),
+    "caverta": ("10008", "sildenafil", ["sildenafil", "manforce"]),
 
-    "nitroglycerin": ("7407", "nitroglycerin", ["Nitrostat", "Nitrolong", "Angiplat", "Nitrocontin"]),
-    "nitrostat": ("7407", "nitroglycerin", ["Nitroglycerin Sublingual"]),
-    "nitrolong": ("7407", "nitroglycerin", ["Nitrolong (Mankind Pharma India)"]),
-    "angiplat": ("7407", "nitroglycerin", ["Angiplat (Torrent Pharma India)"]),
+    "nitroglycerin": ("7407", "nitroglycerin", ["nitrostat", "nitrolong", "angiplat", "nitrocontin", "glyceryl trinitrate"]),
+    "glyceryl trinitrate": ("7407", "nitroglycerin", ["nitroglycerin", "nitrostat", "nitrolong"]),
+    "nitrostat": ("7407", "nitroglycerin", ["nitroglycerin", "nitrolong"]),
+    "nitrolong": ("7407", "nitroglycerin", ["nitroglycerin", "angiplat"]),
+    "angiplat": ("7407", "nitroglycerin", ["nitroglycerin", "nitrolong"]),
 
     # Lisinopril / Spironolactone
-    "lisinopril": ("29046", "lisinopril", ["Prinivil", "Zestril", "Listril", "Lipril"]),
-    "listril": ("29046", "lisinopril", ["Listril (Torrent Pharma India)"]),
-    "spironolactone": ("9997", "spironolactone", ["Aldactone", "Laxispiron", "CaroSpir"]),
-    "aldactone": ("9997", "spironolactone", ["Aldactone (RPG Life Sciences India)"]),
+    "lisinopril": ("29046", "lisinopril", ["prinivil", "zestril", "listril", "lipril"]),
+    "listril": ("29046", "lisinopril", ["lisinopril", "prinivil"]),
+    "spironolactone": ("9997", "spironolactone", ["aldactone", "laxispiron", "carospir"]),
+    "aldactone": ("9997", "spironolactone", ["spironolactone", "carospir"]),
 
     # Sertraline / Tramadol
-    "sertraline": ("36437", "sertraline", ["Zoloft", "Daxid", "Sertal"]),
-    "zoloft": ("36437", "sertraline", ["Sertraline Hydrochloride"]),
-    "daxid": ("36437", "sertraline", ["Daxid (Sun Pharma India)"]),
+    "sertraline": ("36437", "sertraline", ["zoloft", "daxid", "sertal"]),
+    "zoloft": ("36437", "sertraline", ["sertraline", "daxid"]),
+    "daxid": ("36437", "sertraline", ["sertraline", "zoloft"]),
 
-    "tramadol": ("10689", "tramadol", ["Ultram", "Ultracet", "Tramazac", "ConZip"]),
-    "ultram": ("10689", "tramadol", ["Tramadol Hydrochloride"]),
-    "ultracet": ("10689", "tramadol", ["Ultracet (Janssen / J&J India)"]),
-    "tramazac": ("10689", "tramadol", ["Tramazac (Zydus Cadila India)"]),
+    "tramadol": ("10689", "tramadol", ["ultram", "ultracet", "tramazac", "conzip"]),
+    "ultram": ("10689", "tramadol", ["tramadol", "ultracet"]),
+    "ultracet": ("10689", "tramadol", ["tramadol", "tramazac"]),
+    "tramazac": ("10689", "tramadol", ["tramadol", "ultram"]),
 
     # Metformin
-    "metformin": ("6809", "metformin", ["Glucophage", "Glycomet", "Obimet", "Gluconorm"]),
-    "glucophage": ("6809", "metformin", ["Metformin Hydrochloride"]),
-    "glycomet": ("6809", "metformin", ["Glycomet 500/850/1000 (USV India)"]),
-    "gluconorm": ("6809", "metformin", ["Gluconorm (Lupin India)"]),
+    "metformin": ("6809", "metformin", ["glucophage", "glycomet", "obimet", "gluconorm"]),
+    "glucophage": ("6809", "metformin", ["metformin", "glycomet"]),
+    "glycomet": ("6809", "metformin", ["metformin", "obimet"]),
+    "gluconorm": ("6809", "metformin", ["metformin", "glycomet"]),
 
     # Amlodipine / Simvastatin
-    "amlodipine": ("17767", "amlodipine", ["Norvasc", "Stamlo", "Amlovas", "Amlopin"]),
-    "norvasc": ("17767", "amlodipine", ["Amlodipine Besylate"]),
-    "stamlo": ("17767", "amlodipine", ["Stamlo (Dr. Reddy's India)"]),
-    "amlovas": ("17767", "amlodipine", ["Amlovas (Macleods India)"]),
+    "amlodipine": ("17767", "amlodipine", ["norvasc", "stamlo", "amlovas", "amlopin"]),
+    "norvasc": ("17767", "amlodipine", ["amlodipine", "stamlo"]),
+    "stamlo": ("17767", "amlodipine", ["amlodipine", "amlovas"]),
+    "amlovas": ("17767", "amlodipine", ["amlodipine", "stamlo"]),
 
-    "simvastatin": ("36567", "simvastatin", ["Zocor", "Simvotin"]),
-    "zocor": ("36567", "simvastatin", ["Simvastatin"]),
-    "simvotin": ("36567", "simvastatin", ["Simvotin (Ranbaxy / Sun Pharma India)"]),
+    "simvastatin": ("36567", "simvastatin", ["zocor", "simvotin"]),
+    "zocor": ("36567", "simvastatin", ["simvastatin", "simvotin"]),
+    "simvotin": ("36567", "simvastatin", ["simvastatin", "zocor"]),
+
+    # Digoxin / Furosemide
+    "digoxin": ("197517", "digoxin", ["lanoxin"]),
+    "lanoxin": ("197517", "digoxin", ["digoxin"]),
+    "furosemide": ("4603", "furosemide", ["lasix"]),
+    "lasix": ("4603", "furosemide", ["furosemide"]),
+
+    # Clopidogrel / Omeprazole
+    "clopidogrel": ("32968", "clopidogrel", ["plavix", "deplatt", "clopivas"]),
+    "plavix": ("32968", "clopidogrel", ["clopidogrel", "deplatt"]),
+    "deplatt": ("32968", "clopidogrel", ["clopidogrel", "plavix"]),
+    "omeprazole": ("7646", "omeprazole", ["prilosec", "omez"]),
+    "omez": ("7646", "omeprazole", ["omeprazole", "prilosec"]),
+
+    # Ciprofloxacin / Theophylline
+    "ciprofloxacin": ("2551", "ciprofloxacin", ["cipro", "ciplox"]),
+    "ciplox": ("2551", "ciprofloxacin", ["ciprofloxacin"]),
+    "theophylline": ("10438", "theophylline", ["deriphyllin", "theochron"]),
+    "deriphyllin": ("10438", "theophylline", ["theophylline"]),
+
+    # Diltiazem / Metoprolol
+    "diltiazem": ("3443", "diltiazem", ["dilzem", "cardizem"]),
+    "dilzem": ("3443", "diltiazem", ["diltiazem"]),
+    "metoprolol": ("6918", "metoprolol", ["betaloc", "lopressor", "toprol"]),
+    "betaloc": ("6918", "metoprolol", ["metoprolol"]),
+
+    # Atorvastatin / Pantoprazole / Amoxicillin
+    "atorvastatin": ("83367", "atorvastatin", ["atorva", "lipitor", "lipivas"]),
+    "pantoprazole": ("40254", "pantoprazole", ["pan", "pan 40", "protonix"]),
+    "pan 40": ("40254", "pantoprazole", ["pantoprazole", "pan"]),
+    "amoxicillin": ("723", "amoxicillin", ["mox", "novamox", "amoxil"]),
 
     # Radiocontrast Media
-    "contrast media": ("228494", "iodinated contrast media", ["Radiopaque Contrast"]),
-    "iohexol": ("228494", "iodinated contrast media", ["Omnipaque"]),
+    "contrast media": ("228494", "iodinated contrast media", ["radiopaque contrast", "iohexol", "omnipaque"]),
+    "iodinated contrast media": ("228494", "iodinated contrast media", ["radiopaque contrast", "iohexol", "omnipaque"]),
+    "iohexol": ("228494", "iodinated contrast media", ["omnipaque", "iodinated contrast media"]),
 }
 
 
 async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
     """
     Resolves an entered brand or generic medication name (Indian or global) to RxCUI and canonical active ingredient.
+    Cleans dosage/strength/form before matching.
     """
-    clean_name = entered_name.strip()
-    low_name = clean_name.lower()
+    raw_clean = entered_name.strip()
+    sanitized = sanitize_medication_name(raw_clean)
+    if not sanitized:
+        sanitized = raw_clean.lower()
 
-    # 1. Check local canonical dictionary first (fast fallback for Indian & global brands)
-    if low_name in KNOWN_CANONICAL_MAP:
-        rxcui, canonical, syns = KNOWN_CANONICAL_MAP[low_name]
+    # 1. Check local canonical dictionary first using sanitized name
+    if sanitized in KNOWN_CANONICAL_MAP:
+        rxcui, canonical, syns = KNOWN_CANONICAL_MAP[sanitized]
+        all_syns = list(set([sanitized, canonical] + syns))
         return NormalizedMedication(
-            entered_name=clean_name,
+            entered_name=raw_clean,
             canonical_name=canonical,
             rxcui=rxcui,
-            synonyms=syns,
+            synonyms=all_syns,
         )
 
-    # 2. Try RxNav NIH REST API
+    # Check un-sanitized lowercase just in case
+    low_raw = raw_clean.lower()
+    if low_raw in KNOWN_CANONICAL_MAP:
+        rxcui, canonical, syns = KNOWN_CANONICAL_MAP[low_raw]
+        all_syns = list(set([low_raw, canonical] + syns))
+        return NormalizedMedication(
+            entered_name=raw_clean,
+            canonical_name=canonical,
+            rxcui=rxcui,
+            synonyms=all_syns,
+        )
+
+    # 2. Try RxNav NIH REST API with sanitized name
     try:
         async with httpx.AsyncClient(timeout=4.0) as client:
             url = f"{settings.RXNORM_BASE_URL}/rxcui.json"
-            resp = await client.get(url, params={"name": clean_name})
+            resp = await client.get(url, params={"name": sanitized})
             if resp.status_code == 200:
                 data = resp.json()
                 id_group = data.get("idGroup", {})
@@ -122,7 +209,8 @@ async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
                     rxcui = rx_list[0]
                     ing_url = f"{settings.RXNORM_BASE_URL}/rxcui/{rxcui}/allrelated.json"
                     ing_resp = await client.get(ing_url)
-                    canonical_name = clean_name.lower()
+                    canonical_name = sanitized
+                    syn_list = [sanitized]
                     if ing_resp.status_code == 200:
                         ing_data = ing_resp.json()
                         concept_groups = ing_data.get("allRelatedGroup", {}).get("conceptGroup", [])
@@ -130,40 +218,41 @@ async def normalize_medication_name(entered_name: str) -> NormalizedMedication:
                             if group.get("tty") in ["IN", "PIN"]:
                                 concepts = group.get("conceptProperties", [])
                                 if concepts:
-                                    canonical_name = concepts[0].get("name", clean_name).lower()
+                                    canonical_name = concepts[0].get("name", sanitized).lower()
+                                    syn_list.extend([c.get("name", "").lower() for c in concepts if c.get("name")])
                                     break
                     
                     return NormalizedMedication(
-                        entered_name=clean_name,
+                        entered_name=raw_clean,
                         canonical_name=canonical_name,
                         rxcui=rxcui,
-                        synonyms=[],
+                        synonyms=list(set(syn_list)),
                     )
 
             approx_url = f"{settings.RXNORM_BASE_URL}/approximateTerm.json"
-            approx_resp = await client.get(approx_url, params={"term": clean_name, "maxEntries": 1})
+            approx_resp = await client.get(approx_url, params={"term": sanitized, "maxEntries": 1})
             if approx_resp.status_code == 200:
                 approx_data = approx_resp.json()
                 candidates = approx_data.get("approximateGroup", {}).get("candidate", [])
                 if candidates:
                     first = candidates[0]
                     rxcui = first.get("rxcui", "0000")
-                    canonical_name = first.get("name", clean_name).lower()
+                    canonical_name = sanitize_medication_name(first.get("name", sanitized)) or sanitized
                     return NormalizedMedication(
-                        entered_name=clean_name,
+                        entered_name=raw_clean,
                         canonical_name=canonical_name,
                         rxcui=rxcui,
-                        synonyms=[],
+                        synonyms=[sanitized],
                     )
 
     except Exception as e:
-        logger.warning(f"RxNorm API call failed for '{clean_name}': {e}. Using sanitized string.")
+        logger.warning(f"RxNorm API call failed for '{raw_clean}': {e}. Using sanitized string.")
 
     return NormalizedMedication(
-        entered_name=clean_name,
-        canonical_name=clean_name.lower(),
+        entered_name=raw_clean,
+        canonical_name=sanitized,
         rxcui="00000",
-        synonyms=[],
+        synonyms=[sanitized],
     )
 
 

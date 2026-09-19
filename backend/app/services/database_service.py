@@ -12,6 +12,7 @@ logger = logging.getLogger("medsafe.database")
 
 # Local in-memory store for fallback & unit tests
 _LOCAL_DDI_RULES: Dict[str, Dict[str, Any]] = {}
+_LOCAL_DDI_RULES_BY_RXCUI: Dict[str, Dict[str, Any]] = {}
 _LOCAL_SOURCES: Dict[str, Dict[str, Any]] = {}
 _LOCAL_SOURCE_CHUNKS: List[Dict[str, Any]] = []
 _LOCAL_ANALYSES: Dict[str, Dict[str, Any]] = {}
@@ -45,8 +46,21 @@ def normalize_pair_key(ing_a: str, ing_b: str) -> str:
     return f"{a}|{b}" if a < b else f"{b}|{a}"
 
 
+def get_ddi_rule_by_rxcui(rxcui_a: str, rxcui_b: str) -> Optional[Dict[str, Any]]:
+    """Look up curated DDI rule by RxCUI pair."""
+    if not rxcui_a or not rxcui_b or rxcui_a == "0000" or rxcui_b == "0000" or rxcui_a == "00000" or rxcui_b == "00000":
+        return None
+    
+    c1, c2 = rxcui_a.strip(), rxcui_b.strip()
+    key = f"{c1}|{c2}" if c1 < c2 else f"{c2}|{c1}"
+    return _LOCAL_DDI_RULES_BY_RXCUI.get(key)
+
+
 def get_ddi_rule(ing_a: str, ing_b: str) -> Optional[Dict[str, Any]]:
     """Look up curated DDI rule for an active ingredient pair (canonical ordered)."""
+    if not ing_a or not ing_b:
+        return None
+        
     key = normalize_pair_key(ing_a, ing_b)
     pair_a, pair_b = key.split("|")
 
@@ -177,6 +191,8 @@ def register_local_ddi_rule(
     recommended_action_template: str,
     urgent_warning_template: Optional[str] = None,
     source_info: Optional[Dict[str, Any]] = None,
+    rxcui_a: Optional[str] = None,
+    rxcui_b: Optional[str] = None,
 ):
     """Seed or register a DDI rule into local store (and Supabase if connected)."""
     a, b = ing_a.strip().lower(), ing_b.strip().lower()
@@ -188,6 +204,8 @@ def register_local_ddi_rule(
         "id": str(uuid.uuid4()),
         "ingredient_a": a,
         "ingredient_b": b,
+        "rxcui_a": rxcui_a,
+        "rxcui_b": rxcui_b,
         "risk_level": risk_level,
         "mechanism": mechanism,
         "patient_friendly_summary": patient_friendly_summary,
@@ -203,6 +221,12 @@ def register_local_ddi_rule(
         },
     }
     _LOCAL_DDI_RULES[key] = rule_data
+
+    # Index by RxCUI if available
+    if rxcui_a and rxcui_b and rxcui_a not in ["0000", "00000"] and rxcui_b not in ["0000", "00000"]:
+        c1, c2 = rxcui_a.strip(), rxcui_b.strip()
+        rx_key = f"{c1}|{c2}" if c1 < c2 else f"{c2}|{c1}"
+        _LOCAL_DDI_RULES_BY_RXCUI[rx_key] = rule_data
 
 
 def register_local_source_chunk(
