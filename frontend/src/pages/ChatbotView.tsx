@@ -14,6 +14,7 @@ import {
 import { RiskBadge } from '../components/RiskBadge';
 import { PairResultCard } from '../components/PairResultCard';
 import { KnowledgeBaseModal } from '../components/KnowledgeBaseModal';
+import { FeedbackWidget } from '../components/FeedbackWidget';
 import {
   Send,
   Plus,
@@ -546,6 +547,16 @@ export const ChatbotView: React.FC<ChatbotViewProps> = ({
                         {msg.analysis.pair_results.map((pair, pIdx) => (
                           <PairResultCard key={pIdx} pair={pair} />
                         ))}
+                      </div>
+                    )}
+
+                    {/* Inline Feedback — only shown on real analysis results */}
+                    {msg.analysis && msg.sender === 'assistant' && (
+                      <div className="pt-3 border-t border-emerald-200/40 dark:border-slate-800/80">
+                        <FeedbackWidget
+                          analysisId={msg.analysis.analysis_id}
+                          medications={msg.analysis.normalized_medications.map((m) => ({ name: m.canonical_name }))}
+                        />
                       </div>
                     )}
 
