@@ -1,0 +1,90 @@
+# ==========================================
+# MedSafe AI - Git Ignore Configuration
+# ==========================================
+
+# Environment Files & Secrets (MANDATORY)
+.env
+.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+backend/.env
+frontend/.env
+
+# API Keys, Tokens & Private Credentials
+credentials.json
+secrets.json
+service_account.json
+google-services.json
+GoogleService-Info.plist
+
+# Cryptographic Keys & Certificates
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+
+# Python Environment & Build Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.venv
+venv/
+ENV/
+env/
+backend/venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node.js & React Build Output
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.vite/
+.npm/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDE & Editor Configurations
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
