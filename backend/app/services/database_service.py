@@ -121,7 +121,7 @@ def save_analysis(
     """Store an analysis audit record."""
     record = {
         "id": analysis_id,
-        "user_id": user_id,
+        "user_id": sanitize_user_id(user_id),
         "overall_risk": overall_risk,
         "request_json": request_json,
         "response_json": response_json,
@@ -157,23 +157,38 @@ def get_analysis_by_id(analysis_id: str) -> Optional[Dict[str, Any]]:
     return _LOCAL_ANALYSES.get(analysis_id)
 
 
+def sanitize_user_id(uid: Optional[str]) -> Optional[str]:
+    """Validates and returns normalized UUID string, or None if anonymous/invalid."""
+    if not uid:
+        return None
+    s = str(uid).strip().lower()
+    if s in ["", "undefined", "null", "none"]:
+        return None
+    try:
+        import uuid as _uuid
+        return str(_uuid.UUID(s))
+    except Exception:
+        return None
+
+
 def get_user_analyses(user_id: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
     """Retrieve past analyses."""
+    clean_uid = sanitize_user_id(user_id)
     if supabase_client:
         try:
             q = supabase_client.table("analyses").select("*").order("created_at", desc=True).limit(limit)
-            if user_id:
-                q = q.eq("user_id", user_id)
+            if clean_uid:
+                q = q.eq("user_id", clean_uid)
             res = q.execute()
-            if res.data:
+            if res.data is not None:
                 return res.data
         except Exception as e:
             logger.error(f"Error fetching analyses from Supabase: {e}")
 
     # Fallback local filter
     results = list(_LOCAL_ANALYSES.values())
-    if user_id:
-        results = [r for r in results if r.get("user_id") == user_id]
+    if clean_uid:
+        results = [r for r in results if r.get("user_id") == clean_uid]
     results.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     return results[:limit]
 
@@ -181,16 +196,17 @@ def get_user_analyses(user_id: Optional[str] = None, limit: int = 50) -> List[Di
 def clear_user_analyses(user_id: Optional[str] = None) -> bool:
     """Clear past analyses for the user or all local/session records."""
     global _LOCAL_ANALYSES
-    if user_id:
-        _LOCAL_ANALYSES = {k: v for k, v in _LOCAL_ANALYSES.items() if v.get("user_id") != user_id}
+    clean_uid = sanitize_user_id(user_id)
+    if clean_uid:
+        _LOCAL_ANALYSES = {k: v for k, v in _LOCAL_ANALYSES.items() if v.get("user_id") != clean_uid}
     else:
         _LOCAL_ANALYSES.clear()
 
     if supabase_client:
         try:
             q = supabase_client.table("analyses")
-            if user_id:
-                q.delete().eq("user_id", user_id).execute()
+            if clean_uid:
+                q.delete().eq("user_id", clean_uid).execute()
             else:
                 q.delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
         except Exception as e:
@@ -206,7 +222,7 @@ def save_feedback(
     record = {
         "id": str(uuid.uuid4()),
         "analysis_id": analysis_id,
-        "user_id": user_id,
+        "user_id": sanitize_user_id(user_id),
         "rating": rating,
         "comment": comment,
     }

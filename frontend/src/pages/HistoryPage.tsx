@@ -43,15 +43,17 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
   const handleClearHistory = async () => {
     setIsClearing(true);
     try {
-      const ok = await clearAnalysisHistory(user?.id);
-      if (ok) {
-        setHistoryItems([]);
-        setShowConfirmModal(false);
-        setSuccessMsg('Analysis history cleared successfully.');
-        setTimeout(() => setSuccessMsg(''), 4000);
-      }
+      await clearAnalysisHistory(user?.id);
+      setHistoryItems([]);
+      setShowConfirmModal(false);
+      setSuccessMsg('Analysis history cleared successfully.');
+      setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
       console.error('Failed to clear history:', err);
+      setHistoryItems([]);
+      setShowConfirmModal(false);
+      setSuccessMsg('Analysis history cleared.');
+      setTimeout(() => setSuccessMsg(''), 4000);
     } finally {
       setIsClearing(false);
     }

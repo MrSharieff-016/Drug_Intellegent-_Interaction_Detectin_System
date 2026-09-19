@@ -52,13 +52,22 @@ export const analyzeMedications = async (
   return res.data;
 };
 
+const getAuthHeaders = (userId?: string): Record<string, string> => {
+  const headers: Record<string, string> = {};
+  if (userId && typeof userId === 'string') {
+    const clean = userId.trim();
+    if (clean && clean !== 'undefined' && clean !== 'null') {
+      headers['X-User-ID'] = clean;
+    }
+  }
+  return headers;
+};
+
 export const fetchAnalysisHistory = async (userId?: string): Promise<AnalysisHistoryItem[]> => {
   try {
-    const headers: Record<string, string> = {};
-    if (userId) {
-      headers['X-User-ID'] = userId;
-    }
-    const res = await api.get<AnalysisHistoryItem[]>('/api/analyses', { headers });
+    const res = await api.get<AnalysisHistoryItem[]>('/api/analyses', {
+      headers: getAuthHeaders(userId),
+    });
     return res.data;
   } catch (err) {
     console.error('Error fetching analysis history:', err);
@@ -68,11 +77,9 @@ export const fetchAnalysisHistory = async (userId?: string): Promise<AnalysisHis
 
 export const clearAnalysisHistory = async (userId?: string): Promise<boolean> => {
   try {
-    const headers: Record<string, string> = {};
-    if (userId) {
-      headers['X-User-ID'] = userId;
-    }
-    await api.delete('/api/analyses', { headers });
+    await api.delete('/api/analyses', {
+      headers: getAuthHeaders(userId),
+    });
     return true;
   } catch (err) {
     console.error('Error clearing analysis history:', err);
