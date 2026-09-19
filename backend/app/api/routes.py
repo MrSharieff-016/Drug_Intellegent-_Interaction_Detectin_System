@@ -28,6 +28,7 @@ from app.services.gemini_service import generate_plain_explanations, analyze_unl
 from app.services.database_service import (
     save_analysis,
     get_user_analyses,
+    clear_user_analyses,
     get_analysis_by_id,
     save_feedback,
     register_local_ddi_rule,
@@ -232,6 +233,13 @@ async def list_analyses(x_user_id: Optional[str] = Header(None, alias="X-User-ID
             )
         )
     return history_items
+
+
+@router.delete("/api/analyses")
+async def clear_analyses(x_user_id: Optional[str] = Header(None, alias="X-User-ID")):
+    """Clears past medication risk analysis history for authenticated or session user."""
+    clear_user_analyses(user_id=x_user_id)
+    return {"status": "success", "message": "Analysis history cleared successfully."}
 
 
 @router.get("/api/analyses/{id}", response_model=AnalyzeResponse)

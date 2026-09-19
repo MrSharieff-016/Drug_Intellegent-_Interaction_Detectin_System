@@ -66,6 +66,20 @@ export const fetchAnalysisHistory = async (userId?: string): Promise<AnalysisHis
   }
 };
 
+export const clearAnalysisHistory = async (userId?: string): Promise<boolean> => {
+  try {
+    const headers: Record<string, string> = {};
+    if (userId) {
+      headers['X-User-ID'] = userId;
+    }
+    await api.delete('/api/analyses', { headers });
+    return true;
+  } catch (err) {
+    console.error('Error clearing analysis history:', err);
+    return false;
+  }
+};
+
 export const fetchAnalysisDetail = async (id: string): Promise<AnalyzeResponse> => {
   const res = await api.get<AnalyzeResponse>(`/api/analyses/${id}`);
   return res.data;

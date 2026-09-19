@@ -178,6 +178,27 @@ def get_user_analyses(user_id: Optional[str] = None, limit: int = 50) -> List[Di
     return results[:limit]
 
 
+def clear_user_analyses(user_id: Optional[str] = None) -> bool:
+    """Clear past analyses for the user or all local/session records."""
+    global _LOCAL_ANALYSES
+    if user_id:
+        _LOCAL_ANALYSES = {k: v for k, v in _LOCAL_ANALYSES.items() if v.get("user_id") != user_id}
+    else:
+        _LOCAL_ANALYSES.clear()
+
+    if supabase_client:
+        try:
+            q = supabase_client.table("analyses")
+            if user_id:
+                q.delete().eq("user_id", user_id).execute()
+            else:
+                q.delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
+        except Exception as e:
+            logger.error(f"Error clearing analyses from Supabase: {e}")
+
+    return True
+
+
 def save_feedback(
     analysis_id: str, user_id: Optional[str], rating: int, comment: Optional[str]
 ) -> bool:

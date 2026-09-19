@@ -195,3 +195,26 @@ def test_dynamic_feedback_learning_loop():
     assert "alternate" in pair["recommended_action"].lower() or "physician" in pair["recommended_action"].lower() or "alternate" in pair["plain_explanation"].lower()
 
 
+def test_clear_analysis_history():
+    # 1. Create an analysis
+    res = client.post("/api/analyze", json={
+        "medications": [{"name": "Aspirin"}, {"name": "Paracetamol"}]
+    })
+    assert res.status_code == 200
+
+    # 2. Verify history endpoint has items
+    list_res = client.get("/api/analyses")
+    assert list_res.status_code == 200
+    assert len(list_res.json()) >= 1
+
+    # 3. Clear history
+    del_res = client.delete("/api/analyses")
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "success"
+
+    # 4. Verify history is cleared
+    list_after = client.get("/api/analyses")
+    assert list_after.status_code == 200
+    assert len(list_after.json()) == 0
+
+

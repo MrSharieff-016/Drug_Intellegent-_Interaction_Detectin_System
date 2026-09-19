@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { AnalysisHistoryItem, AnalyzeResponse } from '../types';
-import { fetchAnalysisHistory, fetchAnalysisDetail } from '../services/api';
+import { fetchAnalysisHistory, fetchAnalysisDetail, clearAnalysisHistory } from '../services/api';
 import { RiskBadge } from '../components/RiskBadge';
 import { PairResultCard } from '../components/PairResultCard';
-import { History, Calendar, Pill, ArrowLeft, Loader2 } from 'lucide-react';
+import { History, Calendar, Pill, ArrowLeft, Loader2, Trash2, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 
 interface HistoryPageProps {
   user: any;
@@ -14,6 +14,9 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
   const [selectedDetail, setSelectedDetail] = useState<AnalyzeResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -34,6 +37,23 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
       console.error('Failed to load analysis detail:', err);
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    setIsClearing(true);
+    try {
+      const ok = await clearAnalysisHistory(user?.id);
+      if (ok) {
+        setHistoryItems([]);
+        setShowConfirmModal(false);
+        setSuccessMsg('Analysis history cleared successfully.');
+        setTimeout(() => setSuccessMsg(''), 4000);
+      }
+    } catch (err) {
+      console.error('Failed to clear history:', err);
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -67,9 +87,10 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
 
   return (
     <div className="space-y-6 animate-fade-in pb-12">
-      <div className="glass-panel p-6 border-slate-200 dark:border-slate-800">
+      {/* Header Banner */}
+      <div className="glass-panel p-6 border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <History className="w-6 h-6 text-sky-500 dark:text-sky-400" />
+          <History className="w-6 h-6 text-sky-500 dark:text-sky-400 shrink-0" />
           <div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white">Past Medication Analysis Audits</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -77,8 +98,38 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
             </p>
           </div>
         </div>
+
+        {/* Clear History Button */}
+        {historyItems.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowConfirmModal(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-600 dark:text-rose-400 hover:text-white hover:bg-rose-600 border border-rose-500/30 hover:border-rose-600 transition-all shadow-sm active:scale-95"
+            title="Clear all medication analysis history"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Clear History</span>
+          </button>
+        )}
       </div>
 
+      {/* Success Notification Banner */}
+      {successMsg && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-emerald-800 dark:text-emerald-300 text-xs font-medium flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+          <button
+            onClick={() => setSuccessMsg('')}
+            className="text-emerald-600 dark:text-emerald-400 hover:opacity-75"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* History Items List */}
       {loading ? (
         <div className="p-12 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-8 h-8 text-sky-500 dark:text-sky-400 animate-spin" />
@@ -88,6 +139,9 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
         <div className="glass-panel p-12 text-center text-slate-500 dark:text-slate-400 space-y-3 border-slate-200 dark:border-slate-800">
           <Pill className="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto" />
           <p className="text-sm">No past medication risk analysis records found.</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            Run a drug interaction analysis from the Analyzer tab to generate and record audits.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
@@ -129,6 +183,53 @@ export const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
+              <div className="p-2 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Clear Analysis History?</h3>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              This will permanently clear all saved medication interaction audit records from your history. This action cannot be undone.
+            </p>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isClearing}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearHistory}
+                disabled={isClearing}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-all flex items-center gap-2 shadow-lg shadow-rose-900/30 disabled:opacity-50"
+              >
+                {isClearing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Clearing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Yes, Clear History</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
